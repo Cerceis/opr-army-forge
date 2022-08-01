@@ -1,8 +1,11 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { nanoid } from 'nanoid';
+import { isServer } from '../services/Helpers';
 import { ISelectedUnit } from './interfaces';
 
 export interface GameplayState {
   lobbyId: string;
+  userId: string;
   lists: IList[];
 }
 
@@ -20,6 +23,7 @@ export interface IGameplayUnit extends ISelectedUnit {
 
 const initialState: GameplayState = {
   lobbyId: "",
+  userId: isServer() ? "" : (sessionStorage["af_userId"] ?? (sessionStorage["af_userId"] = nanoid(8))),
   lists: []
 };
 
@@ -31,7 +35,7 @@ export const gameplaySlice = createSlice({
       return initialState;
     },
     setLobby(state, action: PayloadAction<string>) {
-      state.lobbyId = action.payload;
+      state.lobbyId = sessionStorage["af_lastLobbyId"] = action.payload;
     },
     addList(state, action: PayloadAction<IList>) {
       state.lists.push(action.payload)

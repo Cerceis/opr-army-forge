@@ -68,3 +68,5 @@ export function intersperse<T>(arr: T[], sep: T): T[] {
   return arr
     .reduce((a: T[], v: T) => a.length ? [...a, sep, v] : [v], []);
 }
+
+export const isServer = () => typeof(window) === "undefined";

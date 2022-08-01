@@ -15,9 +15,6 @@ import { nanoid } from "nanoid";
 
 function Gameplay() {
   const dispatch = useAppDispatch();
-  const [userId, _] = useState(
-    sessionStorage["af_userId"] ?? (sessionStorage["af_userId"] = nanoid(8))
-  );
   const gameplay = useSelector((state: RootState) => state.gameplay);
   const [socket, setSocket] = useState<Socket>();
   const [isConnected, setIsConnected] = useState(socket?.connected);
@@ -75,7 +72,7 @@ function Gameplay() {
             )}
             {gameplay.lobbyId && (
               <div>
-                <p>User: {userId}</p>
+                <p>User: {gameplay.userId}</p>
                 <p>Lobby: {gameplay.lobbyId}</p>
               </div>
             )}
@@ -83,9 +80,9 @@ function Gameplay() {
         }
       />
       {socket && gameplay.lobbyId ? (
-        <GameView socket={socket} userId={userId} />
+        <GameView socket={socket} userId={gameplay.userId} />
       ) : (
-        <StartGame socket={socket} userId={userId} />
+        <StartGame socket={socket} userId={gameplay.userId} />
       )}
     </>
   );
@@ -96,6 +93,7 @@ export default dynamic(() => Promise.resolve(Gameplay), { ssr: false });
 function StartGame({ socket, userId }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const lastLobbyId = sessionStorage["af_lastLobbyId"];
 
   const loadList = async () => {
     // Redirect to game selection screen if no army selected
@@ -107,7 +105,7 @@ function StartGame({ socket, userId }) {
     const armyBooks = await PersistenceService.loadBooks(dispatch, armyIds, save.gameSystem);
     const list: IList = {
       ...(PersistenceService.buildListFromSave(save, armyBooks) as any), // Cast since unit types don't match...
-      user: userId
+      user: userId,
     };
     dispatch(addList(list));
     return list;
@@ -120,8 +118,8 @@ function StartGame({ socket, userId }) {
     });
   };
 
-  const joinLobby = async () => {
-    const lobbyId = prompt("Enter Lobby ID");
+  const joinLobby = async (rejoin?: boolean) => {
+    const lobbyId = rejoin ? lastLobbyId : prompt("Enter Lobby ID");
     if (lobbyId) {
       const list = await loadList();
 
@@ -139,15 +137,19 @@ function StartGame({ socket, userId }) {
   };
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Stack sx={{ maxWidth: "480px" }}>
-        <Button variant="contained" onClick={createLobby} sx={{ mb: 2 }}>
-          Create Lobby
+    <Stack sx={{ maxWidth: "480px", mx: "auto", p: 4 }}>
+      <Button variant="contained" onClick={createLobby} sx={{ mb: 2 }}>
+        Create Lobby
+      </Button>
+      <Button variant="outlined" onClick={() => joinLobby()}>
+        Join Lobby
+      </Button>
+
+      {lastLobbyId && (
+        <Button variant="outlined" onClick={() => joinLobby(true)}>
+          Rejoin Last Lobby
         </Button>
-        <Button variant="outlined" onClick={joinLobby}>
-          Join Lobby
-        </Button>
-      </Stack>
-    </Box>
+      )}
+    </Stack>
   );
 }
