@@ -3,18 +3,31 @@ import { useSelector } from "react-redux";
 import { RootState } from "../data/store";
 import style from "../styles/Cards.module.css";
 import UnitEquipmentTable from "../views/UnitEquipmentTable";
-import { Paper, Card } from "@mui/material";
+import {
+  Paper,
+  Card,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Container,
+  Stack,
+  Typography,
+  Box,
+  useMediaQuery,
+} from "@mui/material";
 import RulesService from "../services/RulesService";
-import { IGameRule } from "../data/armySlice";
-import { groupBy, makeCopy } from "../services/Helpers";
+import { ArmyState, IGameRule } from "../data/armySlice";
+import { groupBy, groupMap, intersperse } from "../services/Helpers";
 import UnitService from "../services/UnitService";
 import UpgradeService from "../services/UpgradeService";
 import _ from "lodash";
 import { ISelectedUnit, IUpgradeGainsItem, IUpgradeGainsRule } from "../data/interfaces";
 import RuleList from "./components/RuleList";
-import { IViewPreferences } from "../pages/view";
+import { IViewPreferences, listContainsPyschic } from "../pages/view";
 import { getFlatTraitDefinitions, ITrait } from "../data/campaign";
 import LinkIcon from "@mui/icons-material/Link";
+import { ListState } from "../data/listSlice";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 interface ViewCardsProps {
   prefs: IViewPreferences;
@@ -29,36 +42,11 @@ export default function ViewCards({ prefs }: ViewCardsProps) {
   const ruleDefinitions: IGameRule[] = gameRules.concat(armyRules);
   const traitDefinitions = getFlatTraitDefinitions();
 
-  const units: ISelectedUnit[] = (list?.units ?? []).map((u) => makeCopy(u));
+  const units = list?.units;
+
+  const unitGroups = UnitService.getDisplayUnits(units);
 
   const usedRules = [];
-
-  const unitAsKey = (unit: ISelectedUnit) => {
-    return {
-      id: unit.id,
-      customName: unit.customName,
-      joinToUnit: unit.joinToUnit,
-      upgrades: unit.selectedUpgrades.map((x) => ({
-        sectionId: x.upgrade.uid,
-        optionId: x.option.id,
-      })),
-      loadout: unit.loadout.map((x) => ({
-        id: x.id,
-        count: x.count,
-      })),
-    };
-  };
-
-  const getAttachedUnit = (u: ISelectedUnit) =>
-    units.find((x) => x.joinToUnit === u.selectionId && x.combined);
-
-  const viewUnits = units
-    .filter((u) => !u.combined || !u.joinToUnit)
-    .map((u) => (u.combined ? UnitService.mergeCombinedUnit(u, getAttachedUnit(u)) : u));
-
-  console.log(viewUnits);
-
-  const unitGroups = _.groupBy(viewUnits, (u) => JSON.stringify(unitAsKey(u)));
 
   const getUnitCard = (unit: ISelectedUnit, unitCount: number) => {
     const rules = getRules(unit);
@@ -90,7 +78,7 @@ export default function ViewCards({ prefs }: ViewCardsProps) {
   };
 
   return (
-    <div className="mx-4">
+    <Container maxWidth={false}>
       <div className={style.grid}>
         {prefs.combineSameUnits
           ? Object.values(unitGroups).map((grp: ISelectedUnit[], i) => {
@@ -99,7 +87,7 @@ export default function ViewCards({ prefs }: ViewCardsProps) {
               return getUnitCard(unit, count);
             })
           : units.map((unit, i) => getUnitCard(unit, 1))}
-        {prefs.showPsychic && <PsychicCard army={army} />}
+        {prefs.showPsychic && <SpellsCard army={army} list={list} />}
       </div>
       {!prefs.showFullRules && (
         <SpecialRulesCard
@@ -107,7 +95,7 @@ export default function ViewCards({ prefs }: ViewCardsProps) {
           ruleDefinitions={ruleDefinitions.concat(traitDefinitions as any[])}
         />
       )}
-    </div>
+    </Container>
   );
 }
 
@@ -122,7 +110,7 @@ interface UnitCardProps {
   traitDefinitions: ITrait[];
 }
 
-function UnitCard({
+export function UnitCard({
   unit,
   attachedTo,
   pointCost,
@@ -132,104 +120,109 @@ function UnitCard({
   traitDefinitions,
 }: UnitCardProps) {
   const toughness = toughFromUnit(unit);
+  const tinyScreen = useMediaQuery("(max-width: 420px)", { noSsr: true });
 
   const unitRules = unit.specialRules
     .filter((r) => r.name != "-")
     .concat(UnitService.getUpgradeRules(unit));
-  const items = unit.loadout.filter((x) => x.type === "ArmyBookItem");
+  const items = unit.loadout.filter((x) => x.type === "ArmyBookItem") as IUpgradeGainsItem[];
 
-  const stats = (
-    <div className="is-flex mb-3" style={{ justifyContent: "center" }}>
-      <div className={style.profileStat2}>
-        <p>Quality</p>
-        <div className="stat-break"></div>
-        <p>{unit.quality}+</p>
-      </div>
-      <div className={style.profileStat2}>
-        <p>Defense</p>
-        <div className="stat-break"></div>
-        <p>{unit.defense}+</p>
-      </div>
-      {toughness > 1 && (
-        <div className={style.profileStat2}>
-          <p>Tough</p>
-          <div className="stat-break"></div>
-          <p>{toughness}</p>
-        </div>
-      )}
-    </div>
+  const Stat = ({ label, value }: { label: string; value: string }) => (
+    <Box className={style.profileStat}>
+      <Typography component="span">{label}</Typography>
+      <div className={style.statBreak}></div>
+      <Typography component="span">{value}</Typography>
+    </Box>
   );
 
-  const ruleGroups = _.groupBy(unitRules, (x) => x.name);
-  const ruleKeys = Object.keys(ruleGroups);
-  const itemGroups = _.groupBy(items, (x) => x.name);
-  const itemKeys = Object.keys(itemGroups);
+  const stats = (
+    <Stack justifyContent="center" direction="row" mb={1}>
+      <Stat label={tinyScreen ? "Qua" : "Quality"} value={unit.quality + "+"} />
+      <Stat label={tinyScreen ? "Def" : "Defense"} value={unit.defense + "+"} />
+      {toughness > 1 && <Stat label={tinyScreen ? "Tough" : "Tough"} value={toughness.toString()} />}
+    </Stack>
+  );
 
   const rulesSection = (
-    <div className="px-2 mb-2" style={{ fontSize: "14px" }}>
-      {ruleKeys.map((key, index) => {
-        const group = ruleGroups[key];
+    <Box mb={1} px={1} fontSize="14px">
+      {prefs.showFullRules
+        ? (() => {
+            const itemRules = _.flatMap(
+              items,
+              (item) =>
+                item.content.filter(
+                  (x) => x.type === "ArmyBookRule" || x.type === "ArmyBookDefense"
+                ) as IUpgradeGainsRule[]
+            );
+            return groupMap(
+              unitRules.concat(itemRules),
+              (x) => x.name,
+              (group, key) => {
+                const rule = group[0];
+                const rating = group.reduce(
+                  (total, next) => (next.rating ? total + parseInt(next.rating) : total),
+                  0
+                );
 
-        if (!prefs.showFullRules)
-          return (
-            <span key={index}>
-              {index === 0 ? "" : ", "}
-              <RuleList specialRules={group} />
-            </span>
-          );
+                const ruleDefinition = ruleDefinitions.filter(
+                  (r) => /(.+?)(?:\(|$)/.exec(r.name)[0] === rule.name
+                )[0];
 
-        const rule = group[0];
-        const rating = group.reduce(
-          (total, next) => (next.rating ? total + parseInt(next.rating) : total),
-          0
-        );
+                return (
+                  <Typography key={key} fontSize={"14px"}>
+                    <span style={{ fontWeight: 600 }}>
+                      {RulesService.displayName({ ...rule, rating: rating as any }, count)} -
+                    </span>
+                    <span> {ruleDefinition?.description || ""}</span>
+                  </Typography>
+                );
+              }
+            );
+          })()
+        : (() => {
+            const rules = groupMap(
+              unitRules,
+              (x) => x.name,
+              (group, key) => <RuleList key={key} specialRules={group} />
+            );
 
-        const ruleDefinition = ruleDefinitions.filter(
-          (r) => /(.+?)(?:\(|$)/.exec(r.name)[0] === rule.name
-        )[0];
+            const itemRules = groupMap(
+              items,
+              (x) => x.name,
+              (group, key) => {
+                const item: IUpgradeGainsItem = group[0] as IUpgradeGainsItem;
+                const count = _.sumBy(group, (x) => x.count || 1);
 
-        return (
-          <p key={index}>
-            <span style={{ fontWeight: 600 }}>
-              {RulesService.displayName({ ...rule, rating }, count)} -
-            </span>
-            <span> {ruleDefinition?.description || ""}</span>
-          </p>
-        );
-      })}
-      {itemKeys.map((key, index) => {
-        const group = itemGroups[key];
-        const item: IUpgradeGainsItem = group[0];
-        const count = group.reduce((total, x) => total + (x.count || 1), 0);
+                const itemRules: IUpgradeGainsRule[] = item.content.filter(
+                  (x) => x.type === "ArmyBookRule" || x.type === "ArmyBookDefense"
+                ) as any;
 
-        const itemRules: IUpgradeGainsRule[] = item.content.filter(
-          (x) => x.type === "ArmyBookRule" || x.type === "ArmyBookDefense"
-        ) as any;
-        const itemHasRules = itemRules.length > 0;
+                const upgrade = unit.selectedUpgrades.find((x) =>
+                  x.option.gains.some((y) => y.name === item.name)
+                )?.upgrade;
+                const itemAffectsAll = upgrade?.affects === "all";
+                const hasStackableRule = itemRules.some((x) => x.name === "Impact");
+                const hideCount = itemAffectsAll && !hasStackableRule;
 
-        const upgrade = unit.selectedUpgrades.find((x) =>
-          x.option.gains.some((y) => y.name === item.name)
-        )?.upgrade;
-        const itemAffectsAll = upgrade?.affects === "all";
-        const hasStackableRule = itemRules.some((x) => x.name === "Impact");
-        const hideCount = itemAffectsAll && !hasStackableRule;
+                return (
+                  <span key={key}>
+                    {count > 1 && !hideCount && `${count}x `}
+                    {item.name}
+                    {itemRules.length > 0 && (
+                      <>
+                        <span>(</span>
+                        <RuleList specialRules={itemRules} />
+                        <span>)</span>
+                      </>
+                    )}
+                  </span>
+                );
+              }
+            );
 
-        return (
-          <span key={index}>
-            {ruleKeys.length > 0 && ", "}
-            {count > 1 && !hideCount && `${count}x `}
-            {item.name}
-            {itemHasRules && (
-              <>
-                <span>(</span>
-                <RuleList specialRules={itemRules} />
-                <span>)</span>
-              </>
-            )}
-          </span>
-        );
-      })}
-    </div>
+            return intersperse(rules.concat(itemRules), <span>, </span>);
+          })()}
+    </Box>
   );
 
   const traitsSection = unit.traits?.length > 0 && (
@@ -271,7 +264,7 @@ function UnitCard({
           {unit.customName || unit.name}
           <span className="" style={{ color: "#666666" }}>
             {" "}
-            [{unit.size}]
+            [{UnitService.getSize(unit)}]
           </span>
           {prefs.showPointCosts && (
             <span className="is-size-6 ml-1" style={{ color: "#666666" }}>
@@ -286,41 +279,52 @@ function UnitCard({
           {stats}
           {rulesSection}
           {traitsSection}
-          <div className="mt-4">
-            <UnitEquipmentTable unit={unit} hideEquipment={true} square />
-          </div>
+          <UnitEquipmentTable loadout={unit.loadout} hideEquipment square />
+          {unit.notes && <div className="p-2">{unit.notes}</div>}
         </>
       }
     />
   );
 }
 
-function PsychicCard({ army }) {
+interface SpellsCardProps {
+  army: ArmyState;
+  list: ListState;
+}
+
+export function SpellsCard({ army, list }: SpellsCardProps) {
+  const isGrimdark = army.gameSystem.startsWith("gf");
   return (
     <>
-      {army.loadedArmyBooks.map((book) => (
-        <ViewCard
-          title="Psychic/Spells"
-          content={
-            <>
-              <hr className="my-0" />
+      {army.loadedArmyBooks.map((book) => {
+        const enable = listContainsPyschic(list.units.filter((x) => x.armyId === book.uid));
+        return (
+          enable && (
+            <ViewCard
+              key={book.uid}
+              title={`${book.name} ${isGrimdark ? "Psychic " : ""} Spells`}
+              content={
+                <>
+                  <hr className="my-0" />
 
-              <Paper square elevation={0}>
-                <div className="px-2 my-2">
-                  {book.spells.map((spell) => (
-                    <p key={spell.id}>
-                      <span style={{ fontWeight: 600 }}>
-                        {spell.name} ({spell.threshold}+):{" "}
-                      </span>
-                      <span>{spell.effect}</span>
-                    </p>
-                  ))}
-                </div>
-              </Paper>
-            </>
-          }
-        />
-      ))}
+                  <Paper square elevation={0}>
+                    <div className="px-2 my-2">
+                      {book.spells.map((spell) => (
+                        <p key={spell.id}>
+                          <span style={{ fontWeight: 600 }}>
+                            {spell.name} ({spell.threshold}+):{" "}
+                          </span>
+                          <span>{spell.effect}</span>
+                        </p>
+                      ))}
+                    </div>
+                  </Paper>
+                </>
+              }
+            />
+          )
+        );
+      })}
     </>
   );
 }
@@ -338,7 +342,7 @@ function SpecialRulesCard({ usedRules, ruleDefinitions }) {
                 .sort()
                 .map((r, i) => (
                   <p key={i} style={{ breakInside: "avoid" }}>
-                    <span style={{ fontWeight: 600 }}>{r} - </span>
+                    <span style={{ fontWeight: 600 }}>{r + " - "}</span>
                     <span>{ruleDefinitions.find((t) => t.name === r)?.description}</span>
                   </p>
                 ))}
@@ -353,12 +357,14 @@ function SpecialRulesCard({ usedRules, ruleDefinitions }) {
 function ViewCard({ title, content }) {
   return (
     <Card elevation={1} className={style.card}>
-      <div className="card-body">
-        <h3 className="is-size-5 my-2" style={{ fontWeight: 600, textAlign: "center" }}>
-          {title}
-        </h3>
-        {content}
-      </div>
+      <Accordion disableGutters defaultExpanded>
+        <AccordionSummary className="card-accordion-summary" expandIcon={<ExpandMoreIcon />}>
+          <h3 className="is-size-5 my-2" style={{ fontWeight: 600, textAlign: "center", flex: 1 }}>
+            {title}
+          </h3>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0 }}>{content}</AccordionDetails>
+      </Accordion>
     </Card>
   );
 }

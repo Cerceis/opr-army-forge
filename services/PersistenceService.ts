@@ -1,7 +1,7 @@
 import { ThunkDispatch } from "@reduxjs/toolkit";
 import { Dispatch } from "react";
 import { ArmyState, getArmyBookData, getGameRules, IArmyData, resetLoadedBooks, setGameSystem } from "../data/armySlice";
-import { ISaveData, ISavedListState, ISelectedUnit, ISpecialRule, IUnit, IUpgrade, IUpgradeGainsWeapon, IUpgradeOption } from "../data/interfaces";
+import { ISaveData, ISavedListState, ISelectedUnit, ISpecialRule, IUnit, IUpgrade, IUpgradeGains, IUpgradeGainsWeapon, IUpgradeOption } from "../data/interfaces";
 import { ListState, loadSavedList } from "../data/listSlice";
 import { RootState } from "../data/store";
 import { groupBy, makeCopy } from "./Helpers";
@@ -10,6 +10,7 @@ import UnitService from "./UnitService";
 import UpgradeService from "./UpgradeService";
 import _ from "lodash";
 import { IViewPreferences } from "../pages/view";
+import { nanoid } from "nanoid";
 
 export default class PersistenceService {
 
@@ -126,6 +127,14 @@ export default class PersistenceService {
       ...save,
       favourite: isFavourite
     });
+  }
+
+  public static copyList(save: ISaveData) {
+
+    const copy: ISaveData = JSON.parse(JSON.stringify(save));
+    copy.list.creationTime = nanoid();
+    copy.list.name += " - Copy";
+    localStorage[this.getSaveKey(copy.list.creationTime)] = JSON.stringify(copy);
   }
 
   public static delete(list: ListState) {
@@ -269,23 +278,28 @@ export default class PersistenceService {
       `++ ${list.name} [${list.points}pts] ++\n`
     ];
 
-    const constructLabel = (item: IUpgradeGainsWeapon) => {
-      const count = item.count > 1 ? `${item.count}x ` : "";
-      const range = item.range ? `${item.range}", ` : "";
-      const attacks = item.attacks ? `A${item.attacks}` : ""
+    const constructLabel = (item: IUpgradeGains) => {
+      const weapon = item as IUpgradeGainsWeapon;
+      const range = weapon.range ? `${weapon.range}", ` : "";
+      const attacks = weapon.attacks ? `A${weapon.attacks}` : ""
       const rules = item.specialRules?.map(RulesService.displayName).join(", ");
 
       if (!range && !attacks && !rules)
-        return `${count}${item.name}`;
+        return item.name;
 
-      return `${count}${item.name} (${range}${attacks}${rules?.length > 0 ? (", " + rules) : ""})`;
+      return `${item.name} (${range}${attacks}${rules?.length > 0 ? (", " + rules) : ""})`;
     };
-
     const getWeapons = (unit: ISelectedUnit) => {
-      console.log("Loadout", unit.loadout);
-      return unit.loadout
-        .map(constructLabel)
-        .join(", ");
+      const allWeapons = unit.loadout
+        .concat(_.flatMap(unit.loadout, x => ((x as any).content || [])))
+        .filter(x => x.type === "ArmyBookWeapon");
+      const loadoutGroups = _.groupBy(allWeapons, x => constructLabel(x));
+      const loadoutParts = Object.keys(loadoutGroups).map(key => {
+        const group = loadoutGroups[key];
+        const count = group.reduce((sum, next) => sum + next.count, 0);
+        return `${count > 1 ? `${count}x ` : ""}${key}`
+      });
+      return loadoutParts.join(", ");
     };
 
     const getRules = (unit: ISelectedUnit) => {
@@ -297,7 +311,7 @@ export default class PersistenceService {
       // Sort rules alphabetically
       keys.sort((a, b) => a.localeCompare(b));
 
-      return keys.map(key => {
+      const displayRules = keys.map(key => {
 
         // This has been copy/pasted from RuleList.tsx - refactor!
         const group: ISpecialRule[] = ruleGroups[key];
@@ -313,19 +327,25 @@ export default class PersistenceService {
         const count = rating > 0 ? 0 : group.length;
 
         return (count > 1 ? `${count}x ` : "") + RulesService.displayName({ ...rule, rating: rule.rating ? rating.toString() : null });
-      }).join(", ");
+      });
+
+      return displayRules.concat(unit.traits).join(", ");
     };
 
-    // Unit name [size] Qua 3+ Def 4+ 123pts
-    // 2x Hand Weapons, Rifle
-    // Fearless
-    //
-    // ...
-    for (let unit of list.units) {
+    const unitGroups = UnitService.getDisplayUnits(list.units);
+
+    for (let key of Object.keys(unitGroups)) {
+      const group = unitGroups[key];
+      const unit = group[0];
+
+      const originalUnit = list.units.find((x) => x.selectionId === unit.selectionId);
+      const attachedUnit = list.units.find((x) => x.joinToUnit === unit.selectionId && x.id === unit.id);
+      const originalUnitCost = UpgradeService.calculateUnitTotal(originalUnit);
+      const attachedUnitCost = attachedUnit ? UpgradeService.calculateUnitTotal(attachedUnit) : 0;
+      const cost = originalUnitCost + attachedUnitCost;
       // TODO: Campaign unit pt cost...?
-      lines.push(`${unit.customName ?? unit.name} [${unit.size}] | Qua ${unit.quality}+ Def ${unit.defense}+ | ${UpgradeService.calculateUnitTotal(unit)}pts`);
-      lines.push(getWeapons(unit));
-      lines.push(getRules(unit) + "\n");
+      lines.push(`${group.length > 1 ? (group.length + "x ") : ""}${unit.customName ?? unit.name} [${UnitService.getSize(unit)}] Q${unit.quality}+ D${unit.defense}+ | ${cost}pts | ` + getRules(unit));
+      lines.push(getWeapons(unit) + "\n");
     }
 
     return lines.join("\n");

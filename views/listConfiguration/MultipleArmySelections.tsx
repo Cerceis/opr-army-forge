@@ -14,11 +14,7 @@ import { Fragment } from "react";
 import { RootState } from "../../data/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/router";
-import {
-  getArmyBookData,
-  unloadArmyBook,
-  unloadFaction,
-} from "../../data/armySlice";
+import { getArmyBookData, unloadArmyBook, unloadFaction } from "../../data/armySlice";
 import _ from "lodash";
 import { removeUnitsForBook } from "../../data/listSlice";
 
@@ -33,9 +29,7 @@ export default function MultipleArmySelections() {
   const allowRemove =
     _.uniq(
       armyState.selectedFactions.concat(
-        loadedArmyBooks
-          .filter((book) => !book.factionName)
-          .map((book) => book.name)
+        loadedArmyBooks.filter((book) => !book.factionName).map((book) => book.name)
       )
     ).length > 1;
 
@@ -48,10 +42,10 @@ export default function MultipleArmySelections() {
 
   return (
     <>
-      <Typography className="my-2" fontWeight={600}>
+      <Typography my={2} fontWeight={600}>
         Selected Army Books
       </Typography>
-      <Paper sx={{ background: "rgba(33, 33, 33, 0.08)" }} elevation={0}>
+      <Paper sx={{ backgroundColor: "action.hover" }} elevation={0}>
         <List>
           {loadedArmyBooks
             .filter((book) => !book.factionName)
@@ -73,7 +67,7 @@ export default function MultipleArmySelections() {
           ))}
 
           <ListItem disablePadding>
-            <ListItemButton color="primary" onClick={addAnotherBook}>
+            <ListItemButton onClick={addAnotherBook}>
               <ListItemText
                 primary={
                   <Typography color="primary" fontWeight={600}>
@@ -93,9 +87,9 @@ function ArmyBookSelection({ army, allowRemove, editMode }) {
   const dispatch = useDispatch();
 
   function remove(armyId) {
-    const prompt = !editMode || confirm(
-      "Removing this army book will remove all associated units. Remove anyway?"
-    );
+    const prompt =
+      !editMode ||
+      confirm("Removing this army book will remove all associated units. Remove anyway?");
     if (prompt) {
       dispatch(unloadArmyBook(armyId));
       dispatch(removeUnitsForBook(armyId));
@@ -130,19 +124,16 @@ function FactionArmyBookSelection({ faction, allowRemove, editMode }) {
 
   const armyState = useSelector((state: RootState) => state.army);
   const armyBooks = armyState.armyBooks;
-  const loadedArmyBooks = armyState.loadedArmyBooks.filter(
-    (book) => book.factionName === faction
-  );
+  const loadedArmyBooks = armyState.loadedArmyBooks.filter((book) => book.factionName === faction);
   const factionBooks = armyBooks.filter((book) => book.factionName === faction);
-  const factionRelation = factionBooks.filter(book => book.factionRelation)[0]?.factionRelation;
+  const factionRelation = factionBooks.filter((book) => book.factionRelation)[0]?.factionRelation;
 
   function removeFaction(faction) {
-    
-    const prompt = !editMode || confirm(
-      "Removing this faction will remove all associated units. Remove anyway?"
-    );
+    const prompt =
+      !editMode ||
+      confirm("Removing this faction will remove all associated units. Remove anyway?");
     if (prompt) {
-      const booksToRemove = loadedArmyBooks.map(book => book.uid);
+      const booksToRemove = loadedArmyBooks.map((book) => book.uid);
       dispatch(unloadFaction(faction));
       for (let bookId of booksToRemove) {
         dispatch(removeUnitsForBook(bookId));
@@ -151,9 +142,9 @@ function FactionArmyBookSelection({ faction, allowRemove, editMode }) {
   }
 
   function remove(armyId) {
-    const prompt = !editMode || confirm(
-      "Removing this army book will remove all associated units. Remove anyway?"
-    );
+    const prompt =
+      !editMode ||
+      confirm("Removing this army book will remove all associated units. Remove anyway?");
     if (prompt) {
       dispatch(unloadArmyBook(armyId));
       dispatch(removeUnitsForBook(armyId));
@@ -178,11 +169,8 @@ function FactionArmyBookSelection({ faction, allowRemove, editMode }) {
       >
         <ListItemText
           primary={faction + " " + factionRelation}
-          secondary={
-            <span style={{ color: "#B00020" }}>
-              {loadedArmyBooks.length === 0 ? "Select at least one option" : ""}
-            </span>
-          }
+          secondary={loadedArmyBooks.length === 0 ? "Select at least one option" : ""}
+          secondaryTypographyProps={{ sx: { color: "error.dark" } }}
         />
       </ListItem>
       {factionBooks.map((book, bookIndex) => {
@@ -205,11 +193,7 @@ function FactionArmyBookSelection({ faction, allowRemove, editMode }) {
             {bookIndex > 0 && <Divider sx={{ marginLeft: "26px" }} />}
             <ListItem
               secondaryAction={
-                <Checkbox
-                  sx={{ right: "-12px" }}
-                  checked={enabled}
-                  onClick={selectSubfaction}
-                />
+                <Checkbox sx={{ right: "-12px" }} checked={enabled} onClick={selectSubfaction} />
               }
             >
               <ListItemText primary={book.name} sx={{ textIndent: "12px" }} />

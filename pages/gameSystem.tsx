@@ -1,10 +1,10 @@
 import { useDispatch } from "react-redux";
 import { setGameSystem } from "../data/armySlice";
 import { useRouter } from "next/router";
-import { Paper } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { useEffect } from "react";
-import NotificationBanner from "../views/components/NotificationBanner";
 import { MenuBar } from "../views/components/MenuBar";
+import { Container } from "@mui/system";
 
 function selectGameSystem(dispatch, router, gameSystem: string) {
   dispatch(setGameSystem(gameSystem));
@@ -22,8 +22,7 @@ export default function GameSystem() {
     if (router.query) {
       console.log(router.query);
       const gameSystem = router.query.gameSystem as string;
-      if (gameSystems.includes(gameSystem))
-        selectGameSystem(dispatch, router, gameSystem);
+      if (gameSystems.includes(gameSystem)) selectGameSystem(dispatch, router, gameSystem);
     }
   }, []);
 
@@ -31,20 +30,17 @@ export default function GameSystem() {
 
   return (
     <>
-      <NotificationBanner />
       <MenuBar title="Create a new list" onBackClick={() => router.push("/")} />
-      <div className="container">
-        <div className="mx-auto p-4" style={{ maxWidth: "480px" }}>
-          <h3 className="is-size-4 has-text-centered mb-4">
-            Select Game System
-          </h3>
-          <div className="columns is-multiline is-mobile">
-            {gameSystems.map((gameSystem) => (
-              <GameSystemTile key={gameSystem} gameSystem={gameSystem} />
-            ))}
-          </div>
-        </div>
-      </div>
+      <Container maxWidth={false} sx={{ maxWidth: "480px", mx: "auto", mt: 2 }}>
+        <Typography variant="h5" sx={{ textAlign: "center", mb: 2 }}>
+          Select Game System
+        </Typography>
+        <Grid container spacing={2}>
+          {gameSystems.map((gameSystem) => (
+            <GameSystemTile key={gameSystem} gameSystem={gameSystem} />
+          ))}
+        </Grid>
+      </Container>
     </>
   );
 }
@@ -54,18 +50,18 @@ function GameSystemTile({ gameSystem }) {
   const router = useRouter();
 
   return (
-    <div className="column is-half">
-      <Paper>
-        <img
-          onClick={() => selectGameSystem(dispatch, router, gameSystem)}
-          src={`img/${gameSystem}_cover.jpg`}
-          className={"game-system-tile interactable"}
-          style={{
-            borderRadius: "4px",
-            display: "block",
-          }}
-        />
-      </Paper>
-    </div>
+    <Grid item xs={6}>
+      <img
+        onClick={() => selectGameSystem(dispatch, router, gameSystem)}
+        src={`img/${gameSystem}_cover.jpg`}
+        className="interactable"
+        style={{
+          height: "auto",
+          maxWidth: "100%",
+          borderRadius: "4px",
+          display: "block",
+        }}
+      />
+    </Grid>
   );
 }

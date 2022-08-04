@@ -15,8 +15,9 @@ import {
   Toolbar,
   AppBar,
   Typography,
+  Container,
+  Stack,
 } from "@mui/material";
-import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import _ from "lodash";
 import { Delete } from "@mui/icons-material";
 import PersistenceService from "../services/PersistenceService";
@@ -31,6 +32,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useLongPress } from "use-long-press";
 import UAParser from "ua-parser-js";
 import DownloadFileIcon from "../views/icons/DownloadFile";
+import FileCopyIcon from "@mui/icons-material/FileCopy";
 
 export default function Load() {
   const dispatch = useDispatch<typeof store.dispatch>();
@@ -117,6 +119,10 @@ export default function Load() {
     PersistenceService.toggleFavourite(save, targetState);
   };
 
+  const copyList = (save: ISaveData) => {
+    PersistenceService.copyList(save);
+  };
+
   const readSingleFile = (e) => {
     var file = e.target.files[0];
     if (!file) return;
@@ -150,7 +156,7 @@ export default function Load() {
   const SaveList = ({ saves }) => {
     return (
       <Paper square elevation={0}>
-        <List className="p-0">
+        <List sx={{ p: 0 }}>
           {_.sortBy(saves, (save) => save.modified)
             .reverse()
             .map((save) => (
@@ -217,6 +223,16 @@ export default function Load() {
                 )}
               </IconButton>
               <IconButton
+                disabled={!selections.length}
+                color="primary"
+                onClick={() => {
+                  forEachSelection(copyList);
+                  setSelections([]);
+                }}
+              >
+                <FileCopyIcon />
+              </IconButton>
+              <IconButton
                 color="primary"
                 disabled={!selections.length}
                 onClick={() => {
@@ -232,34 +248,38 @@ export default function Load() {
           </AppBar>
         </Paper>
       )}
-      <div className="container">
+      <Container
+        maxWidth={false}
+        sx={{ mx: "auto", pt: 4, maxWidth: "480px", display: "flex", flexDirection: "column" }}
+      >
         <input type="file" id="file-input" style={{ display: "none" }} onChange={readSingleFile} />
-        <div className="mx-auto" style={{ maxWidth: "480px" }}>
-          <div className="is-flex is-justify-content-center p-4 my-4">
-            <Button variant="contained" color="primary" onClick={() => importFile()}>
-              <DownloadFileIcon fill="white" /> <span className="ml-2">Upload Army Forge File</span>
-            </Button>
-          </div>
-          {loading && (
-            <div className="is-flex is-flex-direction-column is-align-items-center">
-              <CircularProgress />
-              <p>Loading army data...</p>
-            </div>
-          )}
-          {favourites.length > 0 && (
-            <>
-              <p className="px-4 mb-2" style={{ fontWeight: 600 }}>
-                Favourite Lists
-              </p>
-              <SaveList saves={favourites} />
-            </>
-          )}
-          <p className="px-4 my-2" style={{ fontWeight: 600 }}>
-            Saved Lists
-          </p>
-          <SaveList saves={parsedSaves.filter((s) => !s.favourite)} />
-        </div>
-      </div>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => importFile()}
+          sx={{ alignSelf: "center", px: 4 }}
+        >
+          <DownloadFileIcon fill="white" /> <span>&nbsp;Upload Army Forge File</span>
+        </Button>
+        {loading && (
+          <Stack alignItems="center" mt={2}>
+            <CircularProgress />
+            <p>Loading army data...</p>
+          </Stack>
+        )}
+        {favourites.length > 0 && (
+          <>
+            <p style={{ fontWeight: 600 }}>
+              Favourite Lists
+            </p>
+            <SaveList saves={favourites} />
+          </>
+        )}
+        <p style={{ fontWeight: 600 }}>
+          Saved Lists
+        </p>
+        <SaveList saves={parsedSaves.filter((s) => !s.favourite)} />
+      </Container>
     </>
   );
 }
@@ -295,10 +315,13 @@ function SaveListItem({
   const points = save.listPoints;
   const title = (
     <>
-      <span style={{ fontWeight: 600 }}>
+      <Typography component="span" sx={{ fontWeight: 600 }}>
         {save.gameSystem?.toUpperCase()} - {save.list.name}
-      </span>
-      <span style={{ color: "#656565" }}> • {points}pts</span>
+      </Typography>
+      <Typography sx={{ color: "text.secondary" }} component="span">
+        {" "}
+        • {points}pts
+      </Typography>
     </>
   );
 
@@ -309,9 +332,8 @@ function SaveListItem({
       secondaryAction={
         showCheckbox && <Checkbox checked={selected} onClick={() => onSelect(save)} />
       }
-      style={{ backgroundColor: selected ? "#F9FDFF" : null }}
     >
-      <ListItemButton {...bindLongPress()}>
+      <ListItemButton {...bindLongPress()} selected={selected} disableGutters>
         <ListItemAvatar>
           <ArmyImage
             name={save.armyFaction || save.armyName}
@@ -320,7 +342,7 @@ function SaveListItem({
           />
         </ListItemAvatar>
         <ListItemText
-          className={"ml-2" + (save.saveVersion >= 2 ? "" : " has-text-danger")}
+          sx={{ ml: 2, color: save.saveVersion >= 2 ? "" : "error.main" }}
           primary={title}
           secondary={
             save.saveVersion >= 2

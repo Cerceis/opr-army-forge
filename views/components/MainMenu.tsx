@@ -15,7 +15,8 @@ import {
   Snackbar,
   Divider,
   ListItemIcon,
-  Button,
+  Checkbox,
+  Stack,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -29,12 +30,10 @@ import { updateCreationTime } from "../../data/listSlice";
 import ValidationErrors, { competitiveGoogleDriveLinks } from "../ValidationErrors";
 import ValidationService from "../../services/ValidationService";
 import { useMediaQuery } from "react-responsive";
-import { setOpenReleaseNotes } from "../../data/appSlice";
+import { setDarkMode, setOpenReleaseNotes } from "../../data/appSlice";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import CodeIcon from "@mui/icons-material/Code";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
-import CloudIcon from "@mui/icons-material/Cloud";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import DownloadFileIcon from "../icons/DownloadFile";
@@ -42,67 +41,22 @@ import DownloadFileIcon from "../icons/DownloadFile";
 export default function MainMenu() {
   const army = useSelector((state: RootState) => state.army);
   const list = useSelector((state: RootState) => state.list);
-  const dispatch = useDispatch();
   const router = useRouter();
-  const [menuAnchorElement, setMenuAnchorElement] = useState(null);
+
   const [validationAnchorElement, setValidationAnchorElement] = useState(null);
-  const [showTextCopiedAlert, setShowTextCopiedAlert] = useState(false);
   const errors = ValidationService.getErrors(army, list);
 
-  const handleLoad = () => {
-    router.push("/load");
-  };
-
-  const handleDelete = () => {
-    const confirmMsg = "Are you sure you want to delete this list?";
-    if (confirm(confirmMsg)) {
-      PersistenceService.delete(list);
-      router.replace("/");
-    }
-  };
-
-  const handleSave = () => {
-    const creationTime = PersistenceService.createSave(army, list.name, list);
-    dispatch(updateCreationTime(creationTime));
-    return creationTime;
-  };
-
-  const handleShare = () => {
-    if (!list.creationTime) {
-      const creationTime = handleSave();
-      PersistenceService.download({
-        ...list,
-        creationTime,
-      });
-    } else {
-      PersistenceService.download(list);
-    }
-  };
-
-  const handleShareTTS = () => {
-    if (!list.creationTime) {
-      const creationTime = handleSave();
-      PersistenceService.downloadTTS({
-        ...list,
-        creationTime,
-      });
-    } else {
-      PersistenceService.downloadTTS(list);
-    }
-  };
-
-  const handleTextExport = () => {
-    PersistenceService.copyAsText(list);
-    setShowTextCopiedAlert(true);
-  };
-
-  const navigateToListConfig = () => {
-    router.push({ pathname: "/listConfiguration", query: { ...router.query, edit: true } });
-  };
-
-  const openOprWebapp = () => {
-    window.open("https://webapp.onepagerules.com", "_blank");
-  };
+  // const handleShareTTS = () => {
+  //   if (!list.creationTime) {
+  //     const creationTime = handleSave();
+  //     PersistenceService.downloadTTS({
+  //       ...list,
+  //       creationTime,
+  //     });
+  //   } else {
+  //     PersistenceService.downloadTTS(list);
+  //   }
+  // };
 
   const goBack = () => {
     const confirmMsg = "Going back will leave your current list and go back home. Continue?";
@@ -118,16 +72,15 @@ export default function MainMenu() {
 
   return (
     <>
-      <AppBar elevation={0} style={{ position: "sticky", top: 0, zIndex: 1 }}>
-        <Toolbar className="p-0">
+      <AppBar elevation={0} sx={{ position: "sticky", top: 0, zIndex: 1 }}>
+        <Toolbar style={{ paddingLeft: "8px", paddingRight: "8px" }}>
           <IconButton
             size="large"
             edge="start"
             color="inherit"
             aria-label="menu"
             onClick={goBack}
-            style={{ marginLeft: "0" }}
-            className="mr-4"
+            sx={{ marginLeft: "0", mr: 2, ml: 0 }}
           >
             <HomeIcon />
           </IconButton>
@@ -144,7 +97,6 @@ export default function MainMenu() {
                   backgroundColor: Boolean(validationAnchorElement) ? "#6EAAE7" : null,
                 }}
                 onClick={(e) => setValidationAnchorElement(e.currentTarget)}
-                className="mr-2 p-2"
               >
                 <NotificationImportantIcon />
               </IconButton>
@@ -177,7 +129,7 @@ export default function MainMenu() {
                       {errors.map((error, index) => (
                         <ListItem
                           key={index}
-                          className="mx-4 Ppx-0"
+                          className="mx-4 px-0"
                           style={{ width: "auto" }}
                           divider={index < errors.length - 1}
                         >
@@ -196,89 +148,144 @@ export default function MainMenu() {
               color="inherit"
               aria-label="menu"
               title="View list"
-              onClick={() => router.push("/view")}
-              className="mr-2"
+              onClick={() => router.push({ pathname: "/view", query: router.query })}
             >
               <VisibilityIcon />
             </IconButton>
           )}
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={(e) => setMenuAnchorElement(e.currentTarget)}
-          >
-            <MoreVertIcon />
-          </IconButton>
-          <Menu
-            id="menu-appbar"
-            anchorEl={menuAnchorElement}
-            anchorOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-            open={Boolean(menuAnchorElement)}
-            onClose={(_) => setMenuAnchorElement(null)}
-          >
-            <MenuItem onClick={navigateToListConfig}>
-              <ListItemIcon>
-                <EditOutlinedIcon sx={{ color: "#9E9E9E" }} />
-              </ListItemIcon>
-              <ListItemText>Edit Details</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => router.push("/view")}>
-              <ListItemIcon>
-                <DashboardOutlinedIcon sx={{ color: "#9E9E9E" }} />
-              </ListItemIcon>
-              <ListItemText>View Cards</ListItemText>
-            </MenuItem>
-            {!list.creationTime && <MenuItem onClick={handleSave}>Save</MenuItem>}
-            {list.creationTime && (
-              <MenuItem onClick={handleDelete}>
-                <ListItemIcon>
-                  <DeleteOutlinedIcon sx={{ color: "#9E9E9E" }} />
-                </ListItemIcon>
-                <ListItemText>Delete List</ListItemText>
-              </MenuItem>
-            )}
-            <MenuItem onClick={handleLoad}>
-              <ListItemIcon>
-                <FolderOpenIcon sx={{ color: "#9E9E9E" }} />
-              </ListItemIcon>
-              <ListItemText>Open a List</ListItemText>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={handleShare}>
-              <ListItemIcon>
-                <DownloadFileIcon />
-              </ListItemIcon>
-              <ListItemText>Export as Army Forge File</ListItemText>
-            </MenuItem>
-            {/* <MenuItem onClick={handleShareTTS}>Export as TTS File</MenuItem> */}
-            <MenuItem onClick={handleTextExport}>
-              <ListItemIcon>
-                <AssignmentOutlinedIcon sx={{ color: "#9E9E9E" }} />
-              </ListItemIcon>
-              <ListItemText>Export as Text</ListItemText>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={openOprWebapp}>Open OPR Webapp</MenuItem>
-            <MenuItem onClick={() => dispatch(setOpenReleaseNotes(true))}>
-              See Release Notes
-            </MenuItem>
-          </Menu>
+          <MainMenuOptions />
         </Toolbar>
       </AppBar>
       <ValidationErrors
         open={Boolean(validationAnchorElement) && !isBigScreen}
         setOpen={setValidationAnchorElement}
       />
+    </>
+  );
+}
+
+export function MainMenuOptions() {
+  const army = useSelector((state: RootState) => state.army);
+  const list = useSelector((state: RootState) => state.list);
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const [menuAnchorElement, setMenuAnchorElement] = useState(null);
+  const [showTextCopiedAlert, setShowTextCopiedAlert] = useState(false);
+
+  const handleSave = () => {
+    const creationTime = PersistenceService.createSave(army, list.name, list);
+    dispatch(updateCreationTime(creationTime));
+    return creationTime;
+  };
+
+  const handleLoad = () => {
+    router.push("/load");
+  };
+
+  const handleDelete = () => {
+    const confirmMsg = "Are you sure you want to delete this list?";
+    if (confirm(confirmMsg)) {
+      PersistenceService.delete(list);
+      router.replace("/");
+    }
+  };
+
+  const handleShare = () => {
+    if (!list.creationTime) {
+      const creationTime = handleSave();
+      PersistenceService.download({
+        ...list,
+        creationTime,
+      });
+    } else {
+      PersistenceService.download(list);
+    }
+  };
+
+  const handleTextExport = () => {
+    PersistenceService.copyAsText(list);
+    setShowTextCopiedAlert(true);
+  };
+
+  const navigateToListConfig = () => {
+    router.push({ pathname: "/listConfiguration", query: { ...router.query, edit: true } });
+  };
+
+  const openOprWebapp = () => {
+    window.open("https://webapp.onepagerules.com", "_blank");
+  };
+
+  return (
+    <>
+      <IconButton
+        size="large"
+        color="inherit"
+        aria-label="menu"
+        onClick={(e) => setMenuAnchorElement(e.currentTarget)}
+      >
+        <MoreVertIcon />
+      </IconButton>
+      <Menu
+        id="menu-appbar"
+        anchorEl={menuAnchorElement}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        keepMounted
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        open={Boolean(menuAnchorElement)}
+        onClose={(_) => setMenuAnchorElement(null)}
+      >
+        <MenuItem onClick={navigateToListConfig}>
+          <ListItemIcon>
+            <EditOutlinedIcon sx={{ color: "#9E9E9E" }} />
+          </ListItemIcon>
+          <ListItemText>Edit Details</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={() => router.push({ pathname: "/view", query: router.query })}>
+          <ListItemIcon>
+            <DashboardOutlinedIcon sx={{ color: "#9E9E9E" }} />
+          </ListItemIcon>
+          <ListItemText>View Cards</ListItemText>
+        </MenuItem>
+        {!list.creationTime && <MenuItem onClick={handleSave}>Save</MenuItem>}
+        {list.creationTime && (
+          <MenuItem onClick={handleDelete}>
+            <ListItemIcon>
+              <DeleteOutlinedIcon sx={{ color: "#9E9E9E" }} />
+            </ListItemIcon>
+            <ListItemText>Delete List</ListItemText>
+          </MenuItem>
+        )}
+        <MenuItem onClick={handleLoad}>
+          <ListItemIcon>
+            <FolderOpenIcon sx={{ color: "#9E9E9E" }} />
+          </ListItemIcon>
+          <ListItemText>Open a List</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleShare}>
+          <ListItemIcon>
+            <DownloadFileIcon />
+          </ListItemIcon>
+          <ListItemText>Export as Army Forge File</ListItemText>
+        </MenuItem>
+        {/* <MenuItem onClick={handleShareTTS}>Export as TTS File</MenuItem> */}
+        <MenuItem onClick={handleTextExport}>
+          <ListItemIcon>
+            <AssignmentOutlinedIcon sx={{ color: "#9E9E9E" }} />
+          </ListItemIcon>
+          <ListItemText>Export as Text</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={openOprWebapp}>Open OPR Webapp</MenuItem>
+        <MenuItem onClick={() => dispatch(setOpenReleaseNotes(true))}>See Release Notes</MenuItem>
+        <MenuItemDarkMode />
+      </Menu>
       <Snackbar
         open={showTextCopiedAlert}
         onClose={() => setShowTextCopiedAlert(false)}
@@ -287,5 +294,20 @@ export default function MainMenu() {
         autoHideDuration={4000}
       />
     </>
+  );
+}
+
+function MenuItemDarkMode() {
+  const dispatch = useDispatch();
+  const darkMode = useSelector((state: RootState) => state.app.darkMode);
+  if (darkMode === undefined) return null;
+  const toggle = () => {
+    dispatch(setDarkMode(!darkMode));
+  };
+  return (
+    <MenuItem onClick={() => toggle()}>
+      <span style={{ flex: 1 }}>Dark Mode</span>
+      <Checkbox sx={{ p: 0 }} checked={darkMode ?? false} />{" "}
+    </MenuItem>
   );
 }

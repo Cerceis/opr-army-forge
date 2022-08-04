@@ -1,3 +1,5 @@
+import { useTheme } from "@mui/material";
+
 const rotations = {} as any;
 
 export default function ArmyImage({
@@ -7,6 +9,8 @@ export default function ArmyImage({
   size = "100px",
   ...props
 }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const urlName = name
     .replace(/Daemons of.+/gi, "Daemons")
     .replace(/\s+/g, "-")
@@ -15,6 +19,7 @@ export default function ArmyImage({
   const directory = (() => {
     if (urlName === "jackals") return "2022/04";
     if (urlName === "havoc-war-clans") return "2022/05";
+    if (urlName === "saurian-starhost") return "2022/07";
     return "2022/02";
   })();
 
@@ -23,7 +28,7 @@ export default function ArmyImage({
   return (
     <div
       {...props}
-      className={`${props.className ?? ""} is-flex p-2`}
+      className={`${props.className ?? ""} p-2`}
       style={{
         ...props.style,
         position: "relative",
@@ -48,7 +53,6 @@ export default function ArmyImage({
         }}
       ></div>
       <div
-        className="is-flex"
         style={{
           height: "100%",
           width: "100%",
@@ -58,6 +62,7 @@ export default function ArmyImage({
           backgroundRepeat: "no-repeat",
           position: "relative",
           zIndex: 1,
+          //filter: "invert(1)"
         }}
       ></div>
     </div>

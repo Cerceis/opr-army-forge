@@ -1,4 +1,4 @@
-import { Button, Checkbox, FormControlLabel, FormGroup } from "@mui/material";
+import { Button, Checkbox, Grid, FormControlLabel, FormGroup } from "@mui/material";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,7 +20,6 @@ export function CreateView(props: CreateViewProps) {
   const [autoSave, setAutoSave] = useState(true);
   const [isCampaignList, setCampaignList] = useState(false);
 
-  const factionName = router.query["faction"] as string;
   const armyId = router.query["armyId"] as string;
 
   useEffect(() => {
@@ -58,13 +57,13 @@ export function CreateView(props: CreateViewProps) {
 
   return (
     <>
-      <FormGroup className="mt-4 is-flex-direction-row is-align-items-center">
+      <FormGroup sx={{mt:2}}>
         <FormControlLabel
           control={<Checkbox checked={autoSave} onClick={() => setAutoSave((prev) => !prev)} />}
           label="Auto-save changes"
         />
       </FormGroup>
-      <FormGroup className="mb-2 is-flex-direction-row is-align-items-center">
+      <FormGroup>
         <FormControlLabel
           control={
             <Checkbox checked={isCampaignList} onClick={() => setCampaignList((prev) => !prev)} />
@@ -72,14 +71,16 @@ export function CreateView(props: CreateViewProps) {
           label="Campaign Mode"
         />
       </FormGroup>
-      <Button
-        className="mx-auto px-6"
-        variant="contained"
-        onClick={() => create()}
-        disabled={armyState.loadingArmyData}
-      >
-        Create List
-      </Button>
+      <Grid container justifyContent={"center"} sx={{mt:2}}>
+        <Button
+          sx={{ px: 6 }}
+          variant="contained"
+          onClick={() => create()}
+          disabled={armyState.loadingArmyData}
+        >
+          Create List
+        </Button>
+      </Grid>
     </>
   );
 }

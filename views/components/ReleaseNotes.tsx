@@ -1,4 +1,4 @@
-import { Card, CardContent, IconButton, Modal } from "@mui/material";
+import { Box, Card, CardContent, IconButton, Modal, Stack, Typography } from "@mui/material";
 import { Fragment, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,7 +15,7 @@ export default function ReleaseNotes() {
   useEffect(() => {
     const lastVersion = localStorage["lastVersion"];
     const latestVersion = releaseNotes[0].version;
-
+    
     localStorage["lastVersion"] = latestVersion;
 
     // Don't show the popup if the user hasn't visited the app before
@@ -28,33 +28,31 @@ export default function ReleaseNotes() {
   }, []);
 
   return (
-    <Modal open={open} onClose={() => setOpen(false)} style={{ overflowY: "auto" }}>
-      <div className="m-4" style={{ outline: "none" }}>
-        <Card className="mx-auto" style={{ maxWidth: "480px" }}>
-          <CardContent>
-            <div className="is-flex" style={{ alignItems: "center" }}>
-              <h2 className="mb-2" style={{ flex: 1, fontWeight: "600", fontSize: "20px" }}>
-                Release Notes
-              </h2>
-              <IconButton onClick={() => setOpen(false)}>
-                <CloseIcon />
-              </IconButton>
-            </div>
-            {releaseNotes.map((release) => (
-              <Fragment key={release.version}>
-                <h3 className="mb-2" style={{ fontWeight: "600" }}>
-                  v{release.version} - {release.date}
-                </h3>
-                <ul className="mb-4">
-                  {release.notes.map((note, index) => (
-                    <li key={index}>{note}</li>
-                  ))}
-                </ul>
-              </Fragment>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+    <Modal sx={{ my: 2 }} open={open} onClose={() => setOpen(false)} style={{ overflowY: "auto" }}>
+      <Card sx={{ mx: "auto", my: 4, maxWidth: "480px" }}>
+        <CardContent>
+          <Stack alignItems="center" direction="row">
+            <Typography variant="h5" sx={{ flex: 1, fontWeight: "600" }}>
+              Release Notes
+            </Typography>
+            <IconButton onClick={() => setOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+          {releaseNotes.map((release) => (
+            <Box mb={3} key={release.version}>
+              <Typography variant="h6">
+                v{release.version} - {release.date}
+              </Typography>
+              <ul style={{ margin: 0 }}>
+                {release.notes.map((note, index) => (
+                  <li key={index}>{note}</li>
+                ))}
+              </ul>
+            </Box>
+          ))}
+        </CardContent>
+      </Card>
     </Modal>
   );
 }
@@ -67,11 +65,61 @@ interface IRelease {
 
 const releaseNotes: IRelease[] = [
   {
+    version: "0.9.3",
+    date: "2022-07-19",
+    notes: ["Bug fixes:", "- Show count of weapons when granted by equipment upgrade"],
+  },
+  {
+    version: "0.9.2",
+    date: "2022-07-02",
+    notes: [
+      "Enhancements:",
+      "- Added unit notes to card view",
+      "Bug fixes:",
+      "- Special rule comma separation fix",
+    ],
+  },
+  {
+    version: "0.9.1",
+    date: "2022-07-02",
+    notes: ["Bug fix - mobile tabs scroll to top on change"],
+  },
+  {
+    version: "0.9.0",
+    date: "2022-07-02",
+    notes: [
+      "Enhancements:",
+      '- "Heroes only join units from their own faction" competitive warning',
+      "- Added list title/points to print header for card/list view",
+      "- Desktop sticky headers for columns",
+      "- Main options menu added to view screen",
+      "- Command group upgrades now hidden on combined units",
+      "- Campaign traits added to text export",
+      "Bug fixes:",
+      '- "Defense(+2)" changed to "Defense +2"',
+      "- Spells will only be displayed when list has a psychic/wizard from matching army book",
+      "- Text export displays weapons from additional model upgrades",
+      "- Unit count now updates when additional model upgrade is taken",
+      "- Maintain scroll position when opening upgrade panel on mobile",
+      '- Fixed weapon grouping by name only in "my list" view',
+      '- Command group upgrades no longer copied when "Combined Unit" is checked',
+      "- Army cost now updated when unit xp is added",
+    ],
+  },
+  {
+    version: "0.8.3",
+    date: "2022-06-26",
+    notes: ["Bug fix - can now refresh view screen."],
+  },
+  {
+    version: "0.8.2",
+    date: "21/06/22",
+    notes: ["Updated text export format (more compact)."],
+  },
+  {
     version: "0.8.1",
     date: "19/06/22",
-    notes: [
-      "Added AoF:R",
-    ],
+    notes: ["Added AoF:R"],
   },
   {
     version: "0.8.0",
@@ -84,7 +132,7 @@ const releaseNotes: IRelease[] = [
       "- Fixed custom list names in edit list screen",
       "- Fixed units notes duplicating between units",
       "- Fixed campaign traits not showing up in special rules card",
-      "- Fixed equipment rules not showing in card view when unit has no other special rules"
+      "- Fixed equipment rules not showing in card view when unit has no other special rules",
     ],
   },
   {

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, store } from "../data/store";
 import { useRouter } from "next/router";
-import { TextField } from "@mui/material";
+import { Container, Stack, TextField, Box } from "@mui/material";
 
 import { resetList, selectUnit } from "../data/listSlice";
 import { getArmyBooks, setGameSystem } from "../data/armySlice";
@@ -61,27 +61,27 @@ export default function ListConfiguration() {
         onBackClick={() => router.back()}
         transparent
       />
-      <div className="is-flex is-flex-direction-column p-4 mx-auto" style={{ maxWidth: "480px" }}>
-        <div className="mb-6">
+      <Container maxWidth={false} sx={{ maxWidth: "480px", mx: "auto", mt: 2 }}>
+        <Box sx={{ mb: 4 }}>
           {armyData && (
             <ArmyImage name={armyData?.factionName ?? armyData?.name} armyData={armyState} />
           )}
-        </div>
-        <TextField
-          variant="filled"
-          label="List Name"
-          className="mb-4"
-          value={armyName}
-          onChange={(e) => setArmyName(e.target.value)}
-        />
-        <TextField
-          variant="filled"
-          label="Points Limit"
-          type="number"
-          className="mb-4"
-          value={pointsLimit ?? ""}
-          onChange={(e) => setPointsLimit(e.target.value ? parseInt(e.target.value) : null)}
-        />
+        </Box>
+        <Stack spacing={2} sx={{ mb: 2 }}>
+          <TextField
+            variant="filled"
+            label="List Name"
+            value={armyName}
+            onChange={(e) => setArmyName(e.target.value)}
+          />
+          <TextField
+            variant="filled"
+            label="Points Limit"
+            type="number"
+            value={pointsLimit ?? ""}
+            onChange={(e) => setPointsLimit(e.target.value ? parseInt(e.target.value) : null)}
+          />
+        </Stack>
         {ftlState.selectedFaction ? (
           <FtlFaction name={ftlState.selectedFaction.faction} />
         ) : (
@@ -92,7 +92,7 @@ export default function ListConfiguration() {
         ) : (
           <CreateView armyName={armyName} pointsLimit={pointsLimit} />
         )}
-      </div>
+      </Container>
     </>
   );
 }

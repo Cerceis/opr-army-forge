@@ -1,11 +1,11 @@
-@import "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css";
+/*@import "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css";*/
 
 html,
 body {
   padding: 0;
   margin: 0;
   height: 100%;
-  background-color: #FAFAFA;
+  /*background-color: #fafafa;*/
   overflow-y: unset;
 }
 
@@ -17,17 +17,6 @@ a {
 * {
   box-sizing: border-box;
   font-family: "Source Sans Pro", sans-serif;
-}
-
-.full-compact-text {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 24px;
-  text-align: right;
-  letter-spacing: 0.1px;
-  color: #0f71b4;
-  text-transform: lowercase;
 }
 
 .MuiTabs-indicator {
@@ -51,7 +40,7 @@ div[role="tooltip"] {
 .sticky {
   position: sticky !important;
   top: 0;
-  background-color: #FAFAFA;
+  background-color: #fafafa;
   z-index: 10;
   overflow: hidden;
 }
@@ -67,6 +56,10 @@ div[role="tooltip"] {
   display: none !important;
 }
 
+.print-only {
+  display: none;
+}
+
 @media print {
   body {
     zoom: 65%;
@@ -75,19 +68,35 @@ div[role="tooltip"] {
     display: table !important;
   }
   .columns > .column {
-     display: inline-block !important;
-     vertical-align:top;
+    display: inline-block !important;
+    vertical-align: top;
   }
   .no-print {
-    display:none !important;
+    display: none !important;
   }
   * {
     background-color: transparent !important;
     color: black !important;
+  }
+
+  .print-only {
+    display: initial;
+  }
+
+  .card-accordion-summary .MuiAccordionSummary-expandIconWrapper {
+    display: none;
   }
 }
 
 hr {
   height: auto;
   background-color: transparent;
+}
+
+td.weapon-name-cell {
+  white-space: nowrap;
+}
+
+.card-accordion-summary .MuiAccordionSummary-content {
+  margin: 0;
 }

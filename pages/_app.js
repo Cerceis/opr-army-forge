@@ -1,35 +1,22 @@
 import Head from "next/head";
 import "../styles/globals.css";
+import dynamic from "next/dynamic";
 import { store } from "../data/store";
-import { Provider } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import pluralise from "pluralize";
-import { ThemeProvider, createTheme } from "@mui/material";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import ReleaseNotes from "../views/components/ReleaseNotes";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useEffect } from "react";
+import { setDarkMode } from "../data/appSlice";
 
 // TODO: Better place for global generic things to go?
 pluralise.addSingularRule(/Fuses$/i, "Fuse"); // Spear-Fuses -> Spear-Fuse
 pluralise.addSingularRule(/Axes$/i, "Axe"); // Axes -> Axe
 
-const theme = createTheme({
-  typography: {
-    fontFamily: "Source Sans Pro",
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          fontSize: "14px",
-          fontWeight: 600,
-          letterSpacing: "1.25px",
-        },
-      },
-    },
-  },
-});
-
-function MyApp({ Component, pageProps }) {
+function App({ Component, pageProps }) {
   return (
-    <Provider store={store}>
+    <>
       <Head>
         <title>OPR Army Forge Beta</title>
         <meta name="description" content="OPR Army Forge List Builder" />
@@ -43,19 +30,54 @@ function MyApp({ Component, pageProps }) {
           rel="stylesheet"
         />
       </Head>
-      <ThemeProvider theme={theme}>
-        <>
-          <Component {...pageProps} />
-          <ReleaseNotes />
-        </>
-      </ThemeProvider>
-    </Provider>
+      <Provider store={store}>
+        <ThemedApp Component={Component} pageProps={pageProps} />
+      </Provider>
+    </>
   );
 }
 
-MyApp.getInitialProps = async (ctx) => {
-  //console.log("Force disable pre-rendering?");
-  return {};
+const ThemedApp = ({ Component, pageProps }) => {
+  const dispatch = useDispatch();
+  const darkMode = useSelector((state) => state.app.darkMode);
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)", { noSsr: true });
+
+  useEffect(() => {
+    console.log("darkMode", darkMode);
+    console.log("prefersDarkMode", prefersDarkMode);
+    if (darkMode === undefined) {
+      dispatch(setDarkMode(prefersDarkMode));
+    }
+  }, [darkMode]);
+
+  const theme = createTheme({
+    palette: {
+      mode: darkMode ? "dark" : "light",
+    },
+    typography: {
+      fontFamily: "Source Sans Pro",
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            fontSize: "14px",
+            fontWeight: 600,
+            letterSpacing: "1.25px",
+          },
+        },
+      },
+    },
+  });
+  //console.log("Theme", theme);
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+
+      <Component {...pageProps} />
+      <ReleaseNotes />
+    </ThemeProvider>
+  );
 };
 
-export default MyApp;
+export default dynamic(() => Promise.resolve(App), { ssr: false });

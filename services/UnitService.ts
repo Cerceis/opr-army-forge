@@ -13,6 +13,7 @@ import {
 import { ListState } from "../data/listSlice";
 import _ from "lodash";
 import EquipmentService from "./EquipmentService";
+import { makeCopy } from "./Helpers";
 
 export default class UnitService {
   public static getSelected(list: ListState): ISelectedUnit {
@@ -50,7 +51,7 @@ export default class UnitService {
     const upgrades = this.getAllUpgrades(unit, true);
 
     const rules = upgrades.filter((u) => u.type === "ArmyBookRule") || [];
-    const rulesFromitems =
+    const rulesFromItems =
       upgrades
         .filter((u) => u.type === "ArmyBookItem")
         .reduce(
@@ -59,7 +60,7 @@ export default class UnitService {
           []
         ) || [];
 
-    return rules.concat(rulesFromitems) as IUpgradeGainsRule[];
+    return rules.concat(rulesFromItems) as IUpgradeGainsRule[];
   }
 
   public static getAllUpgradeWeapons(unit: ISelectedUnit): IUpgradeGainsWeapon[] {
@@ -128,6 +129,38 @@ export default class UnitService {
       loadout: unit.loadout.concat(attached.loadout),
       selectedUpgrades: unit.selectedUpgrades.concat(attached.selectedUpgrades),
     };
+  }
+
+  public static getDisplayUnits(input: ISelectedUnit[]) {
+    const units = (input ?? []).map((u) => makeCopy(u));
+    const unitAsKey = (unit: ISelectedUnit) => {
+      return {
+        id: unit.id,
+        customName: unit.customName,
+        joinToUnit: unit.joinToUnit,
+        upgrades: unit.selectedUpgrades.map((x) => ({
+          sectionId: x.upgrade.uid,
+          optionId: x.option.id,
+        })),
+        loadout: unit.loadout.map((x) => ({
+          id: x.id,
+          count: x.count,
+        })),
+      };
+    };
+
+    const getAttachedUnit = (u: ISelectedUnit) =>
+      units.find((x) => x.joinToUnit === u.selectionId && x.combined);
+
+    const viewUnits = units
+      .filter((u) => !u.combined || !u.joinToUnit)
+      .map((u) => (u.combined ? UnitService.mergeCombinedUnit(u, getAttachedUnit(u)) : u));
+
+    console.log(viewUnits);
+
+    const unitGroups = _.groupBy(viewUnits, (u) => JSON.stringify(unitAsKey(u)));
+
+    return unitGroups;
   }
 
   private static readonly countRegex = /^(\d+)x\s/;

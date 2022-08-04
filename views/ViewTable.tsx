@@ -5,7 +5,7 @@ import style from "../styles/Cards.module.css";
 import { Paper, Card, TableContainer, Table, TableRow, TableCell, TableHead } from "@mui/material";
 import RulesService from "../services/RulesService";
 import { IGameRule } from "../data/armySlice";
-import { groupBy, makeCopy } from "../services/Helpers";
+import { groupBy, groupMap, makeCopy } from "../services/Helpers";
 import UnitService from "../services/UnitService";
 import UpgradeService from "../services/UpgradeService";
 import _ from "lodash";
@@ -81,6 +81,7 @@ export default function ViewTable({ prefs }: ViewTableProps) {
 
   return (
     <>
+      <p className="mb-2">This view is a work in progress...</p>
       <TableContainer>
         <Table size="small">
           <TableHead>
@@ -201,28 +202,36 @@ function UnitRow({ unit, rules, count, prefs, ruleDefinitions, maxCellWidth }: U
   const loadout = (
     <TableCell>
       <table>
-        {unit.loadout.map((weapon, i) => (
-          <tr key={i}>
-            <td
-              className="weapon-name-cell"
-              style={{
-                ...cellStyle,
-                paddingRight: "12px",
-                fontWeight: "600",
-                width: maxCellWidth ? maxCellWidth + "px" : null,
-              }}
-            >
-              {weapon.count}x {weapon.name}
-            </td>
-            <td style={cellStyle}>{(weapon as any).range ? (weapon as any).range + '"' : "-"}</td>
-            <td style={cellStyle}>A{weapon.attacks}</td>
-            <td style={cellStyle}>
-              {weapon.specialRules?.map((r) => RulesService.displayName(r)).join(", ")}
-            </td>
-          </tr>
-        ))}
+        {groupMap(
+          unit.loadout,
+          (x) => x.name + x.attacks,
+          (group, key) => {
+            const weapon = group[0];
+            return (
+              <tr key={key}>
+                <td
+                  className="weapon-name-cell"
+                  style={{
+                    ...cellStyle,
+                    paddingRight: "12px",
+                    fontWeight: "600",
+                    width: maxCellWidth ? maxCellWidth + "px" : null,
+                  }}
+                >
+                  {_.sumBy(group, (x) => x.count)}x {weapon.name}
+                </td>
+                <td style={cellStyle}>
+                  {(weapon as any).range ? (weapon as any).range + '"' : "-"}
+                </td>
+                <td style={cellStyle}>A{weapon.attacks}</td>
+                <td style={cellStyle}>
+                  {weapon.specialRules?.map((r) => RulesService.displayName(r)).join(", ")}
+                </td>
+              </tr>
+            );
+          }
+        )}
       </table>
-      {/* <UnitEquipmentTable unit={unit} square={true} header={false} /> */}
     </TableCell>
   );
 

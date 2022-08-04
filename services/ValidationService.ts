@@ -1,7 +1,6 @@
 import { ListState } from "../data/listSlice";
 import _ from "lodash";
 import { ArmyState } from "../data/armySlice";
-import UnitService from "./UnitService";
 import UpgradeService from "./UpgradeService";
 
 const unitPointThresholds = {
@@ -48,6 +47,8 @@ export default class ValidationService {
     const joinedHeroes = heroes.filter(u => (u.joinToUnit && units.some(t => t.selectionId === u.joinToUnit)))
     const joinedIds = joinedHeroes.map(u => u.joinToUnit);
 
+    console.log(joinedHeroes);
+
     const duplicateUnitLimit = 1 + Math.floor((points / duplicateUnitThresholds[system]));
     const nonCombinedUnitsGrouped = _.groupBy(units.filter(u => !(u.combined && (!u.joinToUnit))), u => u.id);
     const unitsOverDuplicateLimit = Object
@@ -85,6 +86,9 @@ export default class ValidationService {
 
       if (new Set(joinedIds).size < joinedIds.length)
         errors.push(`A unit can only have a maximum of one Hero attached.`);
+
+      if (joinedHeroes.some(hero => list.units.find(unit => unit.selectionId === hero.joinToUnit).armyId !== hero.armyId))
+        errors.push(`Heroes only join units from their own faction.`);
     }
 
     if (army.loadedArmyBooks.length > 2) {

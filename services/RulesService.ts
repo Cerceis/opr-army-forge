@@ -3,9 +3,15 @@ import { ISpecialRule } from "../data/interfaces";
 export default class RulesService {
   public static displayName(rule: ISpecialRule, count: number = null) {
 
-    return (count > 1 ? `${count}x ` : "")
+    const countStr = (count > 1 ? `${count}x ` : "");
+    const ratingStr = rule.rating
+      ? rule.name === "Defense"
+        ? ` +${rule.rating}`
+        : `(${(rule.modify ? "+" : "") + rule.rating})`
+      : "";
+    return countStr
       + rule.name
-      + ((!(rule.rating == null || rule.rating == "")) ? `(${(rule.name === "Defense" || rule.modify ? "+" : "") + rule.rating})` : "")
+      + (ratingStr)
       + (rule.condition ? ` ${rule.condition}` : "");
   }
 }

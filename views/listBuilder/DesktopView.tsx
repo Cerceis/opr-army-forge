@@ -5,7 +5,7 @@ import { UnitSelection } from "../UnitSelection";
 import { MainList } from "../MainList";
 import { Upgrades } from "../upgrades/Upgrades";
 import MainMenu from "../components/MainMenu";
-import { Card, Paper } from "@mui/material";
+import { Card, Grid, Paper, Typography } from "@mui/material";
 import UpgradePanelHeader from "../components/UpgradePanelHeader";
 import ValidationErrors from "../ValidationErrors";
 import UndoRemoveUnit from "../components/UndoRemoveUnit";
@@ -31,38 +31,42 @@ export default function DesktopView() {
   };
 
   const unitSelectionColumn = (
-    <div className="column py-0 pr-0" style={columnStyle} onScroll={setScrolled}>
-      <Card square elevation={3}>
-        <h3 className="p-4 is-size-4 is-hidden-mobile">
+    <Grid item xs sx={columnStyle} onScroll={setScrolled}>
+      <Card square elevation={1} sx={{ p: 2, position: "sticky", top: 0, zIndex: 1 }}>
+        <Typography variant="h5">
           {ftl.loaded
             ? ftl.selectedFaction.faction
             : loadedArmyBooks.length > 1
             ? "Army Books"
             : `${armyData.name} - ${armyData.versionString}`}
-        </h3>
+        </Typography>
       </Card>
       {ftl.loaded ? <FtlShipSelection /> : <UnitSelection />}
-    </div>
+    </Grid>
   );
 
   const mainListColumn = (
-    <div className="column p-0" style={columnStyle} onScroll={setScrolled}>
-      <Card square elevation={3}>
-        <h3 className="p-4 is-size-4 is-hidden-mobile">
+    <Grid item xs sx={columnStyle} onScroll={setScrolled}>
+      <Card square elevation={1} sx={{ p: 2, position: "sticky", top: 0, zIndex: 1 }}>
+        <Typography variant="h5">
           {`My List - ${list.points}` + (list.pointsLimit ? `/${list.pointsLimit}` : "") + "pts"}
-        </h3>
+        </Typography>
       </Card>
       <MainList onSelected={() => {}} onUnitRemoved={() => setShowUndoRemove(true)} />
-    </div>
+    </Grid>
   );
 
   const upgradesColumn = (
-    <div className="column py-0 px-0 mr-4" style={columnStyle} onScroll={setScrolled}>
-      <Card square elevation={1} className="px-4 pt-4 pb-2 sticky">
+    <Grid item xs sx={columnStyle} onScroll={setScrolled}>
+      <Card
+        square
+        elevation={1}
+        sx={{ px: 2, pt: 2, pb: 1, position: "sticky", top: 0, zIndex: 1 }}
+      >
         <UpgradePanelHeader />
       </Card>
       <Upgrades />
-    </div>
+    </Grid>
   );
 
   return (
@@ -70,11 +74,11 @@ export default function DesktopView() {
       <Paper elevation={1} color="primary" square>
         <MainMenu />
       </Paper>
-      <div className="columns my-0" style={{ height: "calc(100vh - 64px)" }}>
+      <Grid container sx={{ height: "calc(100vh - 64px);" }}>
         {unitSelectionColumn}
         {mainListColumn}
         {upgradesColumn}
-      </div>
+      </Grid>
       <ValidationErrors open={validationOpen} setOpen={setValidationOpen} />
       <UndoRemoveUnit open={showUndoRemove} setOpen={setShowUndoRemove} />
     </>

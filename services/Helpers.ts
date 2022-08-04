@@ -1,6 +1,4 @@
-//import _ from "lodash";
-
-import { NextRouter } from "next/router";
+import _ from "lodash";
 
 export function groupBy(xs, key) {
   return xs.reduce(function (rv, x) {
@@ -58,3 +56,17 @@ export function tryBack(fallback: () => void) {
     history.back();
   }
 }
+
+export function groupMap<In, Out>(obj: In[], keySelector: (item: In) => string, iteratee: (value: In[], key: string) => Out): Out[] {
+  return _.chain(obj)
+    .groupBy(keySelector)
+    .map(iteratee)
+    .value() as any;
+}
+
+export function intersperse<T>(arr: T[], sep: T): T[] {
+  return arr
+    .reduce((a: T[], v: T) => a.length ? [...a, sep, v] : [v], []);
+}
+
+export const isServer = () => typeof (window) === "undefined";

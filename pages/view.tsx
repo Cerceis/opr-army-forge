@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "../data/store";
 import { useRouter } from "next/router";
 import ViewCards from "../views/ViewCards";
-import ViewList from "../views/ViewList";
 import {
   AppBar,
   Button,
@@ -16,8 +15,7 @@ import {
   ListItem,
   ListItemText,
   Switch,
-  TableContainer,
-  Table,
+  Stack,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -27,6 +25,10 @@ import ClearIcon from "@mui/icons-material/Clear";
 import PersistenceService from "../services/PersistenceService";
 import PrintIcon from "@mui/icons-material/Print";
 import ViewTable from "../views/ViewTable";
+import { ISelectedUnit } from "../data/interfaces";
+import UnitService from "../services/UnitService";
+import { MainMenuOptions } from "../views/components/MainMenu";
+import { useLoadFromQuery } from "../hooks/useLoadFromQuery";
 
 export interface IViewPreferences {
   showFullRules: boolean;
@@ -37,13 +39,16 @@ export interface IViewPreferences {
 
 export default function View() {
   const list = useSelector((state: RootState) => state.list);
+  const armyState = useSelector((state: RootState) => state.army);
   const router = useRouter();
+
+  useLoadFromQuery();
 
   const defaultPrefs = {
     showFullRules: false,
     showPointCosts: true,
     combineSameUnits: true,
-    showPsychic: listContainsPyschic(list),
+    showPsychic: listContainsPyschic(list.units),
   } as IViewPreferences;
 
   const [preferences, setPreferenceState] = useState(defaultPrefs);
@@ -55,9 +60,13 @@ export default function View() {
     setPreferenceState((prev) => ({
       ...prev,
       ...prefs,
-      showPsychic: listContainsPyschic(list) || ((prefs as any)?.showPsychic ?? false),
+      showPsychic: listContainsPyschic(list.units) || ((prefs as any)?.showPsychic ?? false),
     }));
   }, []);
+
+  // Load army list file
+
+  if (!armyState.loaded) return <p>Loading...</p>;
 
   function setPreferences(setFunc) {
     const newPrefs = setFunc(preferences);
@@ -65,28 +74,28 @@ export default function View() {
     PersistenceService.saveViewPreferences(newPrefs);
   }
 
+  const title = `${list.name} • ${list.points}pts`;
+
   return (
     <>
       <Paper className="no-print" elevation={2} color="primary" square>
         <AppBar position="static" elevation={0}>
-          <Toolbar>
+          <Toolbar className="p-0">
             <IconButton
               size="large"
-              edge="start"
               color="inherit"
               aria-label="menu"
-              sx={{ mr: 2 }}
               onClick={() => router.back()}
+              style={{ marginLeft: "0" }}
+              className="mr-4"
             >
               <CloseIcon />
             </IconButton>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              {list.name} • {list.points}pts
+              {title}
             </Typography>
             <IconButton
-              className="mr-4"
               size="large"
-              edge="start"
               color="inherit"
               aria-label="menu"
               onClick={() => window.print()}
@@ -95,25 +104,25 @@ export default function View() {
             </IconButton>
             <IconButton
               size="large"
-              edge="start"
               color="inherit"
               aria-label="menu"
               onClick={() => setSettingsOpen(true)}
             >
               <SettingsIcon />
             </IconButton>
+            <MainMenuOptions />
           </Toolbar>
         </AppBar>
       </Paper>
       <Drawer anchor="right" open={settingsOpen} onClose={() => setSettingsOpen(false)}>
-        <div className="is-flex p-4">
-          <h3 className="is-size-4" style={{ flex: 1 }}>
+        <Stack direction="row" p={2}>
+          <h3 className="is-size-4" style={{ flex: 1, margin: 0 }}>
             Display Settings
           </h3>
           <IconButton onClick={() => setSettingsOpen(false)}>
             <ClearIcon />
           </IconButton>
-        </div>
+        </Stack>
         <List>
           <ListItem>
             <ListItemText>Show Psychic/Spells</ListItemText>
@@ -157,26 +166,29 @@ export default function View() {
           </ListItem>
         </List>
       </Drawer>
-      <div className="is-flex px-4 py-2 no-print" style={{ alignItems: "center" }}>
-        <div className="is-flex-grow-1"></div>
+      <Stack px={2} py={1} className="no-print" direction="row" justifyContent="flex-end">
         <Button onClick={() => setCardView(!isCardView)}>
           {isCardView ? <DashboardIcon /> : <ViewAgendaIcon />}
           <span className="pl-1 full-compact-text">{isCardView ? "cards" : "list"}</span>
         </Button>
-      </div>
+      </Stack>
+      <h1 className="print-only" style={{ fontWeight: 600 }}>
+        {title}
+      </h1>
       {isCardView ? <ViewCards prefs={preferences} /> : <ViewTable prefs={preferences} />}
     </>
   );
 }
 
 // TODO: extract these as global helper functions
-function listContainsPyschic(list) {
+export function listContainsPyschic(units: ISelectedUnit[]) {
   // TODO: get the special rule def from a well known location
-  return listContainsSpecialRule(list, { key: "psychic", name: "Psychic", rating: "1" });
+  return listContainsSpecialRule(units, "Psychic") || listContainsSpecialRule(units, "Wizard");
 }
 
-function listContainsSpecialRule(list, specialRule) {
-  return list.units.some(({ specialRules }) =>
-    Boolean(specialRules.find(({ name }) => name === specialRule.name))
-  );
+export function listContainsSpecialRule(units: ISelectedUnit[], specialRule: string) {
+  return units.some((unit) => {
+    const upgradeRules = UnitService.getAllUpgradedRules(unit);
+    return unit.specialRules.concat(upgradeRules).some(({ name }) => name === specialRule);
+  });
 }
