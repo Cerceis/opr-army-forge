@@ -77,7 +77,7 @@ function FtlShipSelectionForFaction({ faction, showTitle }: FtlShipSelectionForF
                   key={ship.key}
                   ship={ship}
                   countInList={countInList}
-                  selected={countInList > 0 || list.unitPreview?.id === u.id}
+                  selected={countInList > 0 || list.unitPreview?.id === ship.key}
                   onClick={() => {
                     handleSelectClick(ship);
                   }}
