@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { resetList } from "../../data/listSlice";
 import _ from "lodash";
 import { ArmyBookList } from "./ArmyBookList";
+import { Typography } from "@mui/material";
 
 export default function FactionSelection({ searchText }) {
   const armyState = useSelector((state: RootState) => state.army);
@@ -99,9 +100,9 @@ export default function FactionSelection({ searchText }) {
 
   return (
     <>
-      <div className="mb-4 has-text-centered is-clearfix">
-        <h3 className="is-size-4 pt-4">Choose {appendMode ? "another" : "an"} Army Book</h3>
-      </div>
+      <Typography variant="h5" sx={{ textAlign: "center", mb: 2 }}>
+        Choose {appendMode ? "another" : "an"} Army Book
+      </Typography>
       <ArmyBookList armyBooks={officialActiveArmies} onSelect={selectArmy} />
     </>
   );
