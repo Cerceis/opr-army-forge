@@ -1,10 +1,11 @@
-import { Divider, Paper } from "@mui/material";
+import { Divider, Paper, Stack, Typography } from "@mui/material";
 import { ISelectedUnit, IUnit } from "../../data/interfaces";
 import EquipmentService from "../../services/EquipmentService";
 import UnitService from "../../services/UnitService";
 import RuleList from "./RuleList";
 import _ from "lodash";
 import UpgradeService from "../../services/UpgradeService";
+import { Box } from "@mui/system";
 
 interface UnitListItemProps {
   unit: ISelectedUnit;
@@ -24,56 +25,63 @@ export default function UnitListItem(props: UnitListItemProps) {
   return (
     <>
       <Paper
-        className="p-4"
-        elevation={0}
-        style={{
-          backgroundColor: props.selected ? "#F9FDFF" : null,
-          borderLeft: props.countInList > 0 ? "2px solid #0F71B4" : null,
+        sx={{
+          p: 2,
+          backgroundColor: props.selected
+            ? "action.selected"
+            : props.countInList > 0
+            ? "action.hover"
+            : null,
+          borderLeft: props.countInList > 0 ? "2px solid red" : null,
+          borderLeftColor: "primary.main",
           cursor: "pointer",
         }}
+        elevation={0}
         square
         onClick={props.onClick}
       >
-        <div className="is-flex is-flex-grow-1 is-align-items-center mb-2">
-          <div className="is-flex-grow-1">
-            <p className="mb-1">
+        <Stack alignItems="center" mb={1} direction="row">
+          <Box flex={1}>
+            <Typography>
               {props.countInList > 0 && (
-                <span style={{ color: "#0F71B4" }}>{props.countInList}x </span>
+                <Typography component="span" color="primary.main">
+                  {props.countInList}x{" "}
+                </Typography>
               )}
               <span>{unit.customName || unit.name} </span>
-              <span style={{ color: "#656565" }}>[{unitSize}]</span>
-            </p>
-            <div
-              className="is-flex"
-              style={{
-                fontSize: "14px",
-                color: "rgba(0,0,0,0.6)",
-              }}
-            >
-              <p>Qua {unit.quality}+</p>
-              <p className="ml-2">Def {unit.defense}+</p>
-            </div>
-          </div>
-          <p>{UpgradeService.calculateUnitTotal(unit)}pts</p>
+              <Typography component="span" color="text.secondary">
+                [{unitSize}]
+              </Typography>
+            </Typography>
+            <Typography color="text.secondary">
+              <Typography variant="body2" component="span">
+                Qua {unit.quality}+
+              </Typography>
+              <Typography variant="body2" component="span" pl={1}>
+                Def {unit.defense}+
+              </Typography>
+            </Typography>
+          </Box>
+          <Typography>{UpgradeService.calculateUnitTotal(unit)}pts</Typography>
           {props.rightControl}
-        </div>
-        <div style={{ fontSize: "14px", color: "rgba(0,0,0,0.6)" }}>
-          <div>
-            {Object.values(weaponGroups).map((group: any[], i) => {
-              const count = group.reduce((c, next) => c + next.count, 0);
-              return (
-                <span key={i}>
-                  {i > 0 ? ", " : ""}
-                  {count > 1 ? `${count}x ` : ""}
-                  {EquipmentService.formatString(group[0] as any)}
-                </span>
-              );
-            })}
-          </div>
+        </Stack>
+        <Typography variant="body2" color="text.secondary">
+          {Object.values(weaponGroups).map((group: any[], i) => {
+            const count = group.reduce((c, next) => c + next.count, 0);
+            return (
+              <span key={i}>
+                {i > 0 ? ", " : ""}
+                {count > 1 ? `${count}x ` : ""}
+                {EquipmentService.formatString(group[0] as any)}
+              </span>
+            );
+          })}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
           <RuleList
             specialRules={unit.specialRules.concat(UnitService.getAllUpgradedRules(unit as any))}
           />
-        </div>
+        </Typography>
       </Paper>
       <Divider />
     </>

@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Button, Grid } from "@mui/material";
 import { useRouter } from "next/router";
 import { useDispatch } from "react-redux";
 import { updateListSettings } from "../../data/listSlice";
@@ -24,12 +24,10 @@ export default function EditView(props: EditViewProps) {
   };
 
   return (
-    <Button
-      className="mt-4 mx-auto px-6"
-      variant="contained"
-      onClick={() => update()}
-    >
-      Save Changes
-    </Button>
+    <Grid container justifyContent={"center"} sx={{ mt: 2 }}>
+      <Button sx={{ px: 6 }} variant="contained" onClick={() => update()}>
+        Save Changes
+      </Button>
+    </Grid>
   );
 }

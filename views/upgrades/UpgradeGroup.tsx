@@ -1,4 +1,4 @@
-import { Paper } from "@mui/material";
+import { Paper, Box, Stack, Typography } from "@mui/material";
 import { ISelectedUnit, IUpgrade, IUpgradeGainsWeapon } from "../../data/interfaces";
 import EquipmentService from "../../services/EquipmentService";
 import UpgradeService from "../../services/UpgradeService";
@@ -45,8 +45,11 @@ export default function UpgradeGroup({ unit, upgrade, previewMode }: UpgradeGrou
   }
 
   return (
-    <div className={"mt-4"}>
-      <div className="px-4 is-flex is-align-items-center">
+    <>
+      <Stack
+        direction="row"
+        sx={{ px: 2, pt: 2, pb: 0.5, backgroundColor: "action.hover", alignItems: "center" }}
+      >
         {unit.combined && upgrade.affects === "all" && (
           <CustomTooltip
             title="This option will be the same on both combined units."
@@ -57,22 +60,16 @@ export default function UpgradeGroup({ unit, upgrade, previewMode }: UpgradeGrou
             <LinkIcon sx={{ fontSize: 22 }} className="mr-2" />
           </CustomTooltip>
         )}
-        <p
-          className="pt-0"
-          style={{
-            fontWeight: "600",
-            lineHeight: 1.7,
-          }}
-        >
+        <Typography fontWeight={600}>
           {groupTitle}{" "}
           {upgrade.type === "replace" && controlType !== "radio" && (
-            <span style={{ color: "rgba(0,0,0,0.6)" }}>
+            <Typography component="span" sx={{ color: "text.secondary" }}>
               [{UpgradeService.countAvailable(unit, upgrade)}]
-            </span>
+            </Typography>
           )}
-        </p>
-      </div>
-      <Paper className="px-4 py-2" square elevation={0}>
+        </Typography>
+      </Stack>
+      <Paper sx={{ px: 2, py: 1 }} square elevation={0}>
         {defaultItem}
         {upgrade.options.map((opt, i) => (
           <UpgradeItem
@@ -85,6 +82,6 @@ export default function UpgradeGroup({ unit, upgrade, previewMode }: UpgradeGrou
           />
         ))}
       </Paper>
-    </div>
+    </>
   );
 }

@@ -2,9 +2,11 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Box,
   Card,
   Checkbox,
-  Divider,
+  Stack,
+  Typography,
 } from "@mui/material";
 import { IconButton } from "@mui/material";
 import DownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -54,8 +56,8 @@ export default function CampaignUpgrades({ unit }: CampaignUpgradesProps) {
     return traits.map((trait) => {
       const checked = !!unit.traits?.find((t) => t === trait.name);
       return (
-        <div key={trait.name} className="is-flex is-align-items-center">
-          <div className="is-flex-grow-1 pr-2">
+        <Stack key={trait.name} direction="row" alignItems="center">
+          <div style={{ flex: 1 }}>
             <RuleList specialRules={[trait]} />
           </div>
           <Checkbox
@@ -64,84 +66,82 @@ export default function CampaignUpgrades({ unit }: CampaignUpgradesProps) {
             value={trait.name}
             disabled={requireLevels ? unit.xp < 5 : false}
           />
-        </div>
+        </Stack>
       );
     });
   };
 
   const displayCount = (count) =>
     count > 0 && (
-      <span className="ml-1" style={{ color: "#9E9E9E" }}>
+      <Typography component="span" ml={0.5} color="text.secondary">
         {" "}
         [{count}]
-      </span>
+      </Typography>
     );
 
   return (
     <>
-      <div className="px-4 mt-4 is-flex is-align-items-center">
-        <p className="pt-0" style={{ fontWeight: 600, lineHeight: 1.7 }}>
-          Campaign Traits
-        </p>
-      </div>
-      <Card elevation={0} square>
-        <div className="pt-2 pb-4 px-4">
-          <div className="is-flex is-align-items-center">
-            <div className="is-flex-grow-1 pr-2">
-              Unit XP <span style={{ color: "rgba(0,0,0,0.6)" }}>(Level {level})</span>
-            </div>
-            <IconButton
-              disabled={unit.xp === 0}
-              color={unit.xp > 0 ? "primary" : "default"}
-              onClick={() => adjustUnitXp(-1)}
-            >
-              <DownIcon />
-            </IconButton>
-            <div style={{ color: "#000000" }}>{unit.xp}XP</div>
-            <IconButton disabled={unit.xp >= 30} color={"primary"} onClick={() => adjustUnitXp(1)}>
-              <UpIcon />
-            </IconButton>
-          </div>
+      <Box px={2} mt={2}>
+        <p style={{ margin: 0, fontWeight: 600, lineHeight: 1.7 }}>Campaign Traits</p>
+      </Box>
+      <Card elevation={0} square sx={{ px: 2, pt: 1, pb: 2 }}>
+        <Stack direction="row" alignItems="center">
+          <Box pr={1} flex={1}>
+            Unit XP{" "}
+            <Typography component="span" color="text.secondary">
+              (Level {level})
+            </Typography>
+          </Box>
+          <IconButton
+            disabled={unit.xp === 0}
+            color={unit.xp > 0 ? "primary" : "default"}
+            onClick={() => adjustUnitXp(-1)}
+          >
+            <DownIcon />
+          </IconButton>
+          <span>{unit.xp}XP</span>
+          <IconButton disabled={unit.xp >= 30} color="primary" onClick={() => adjustUnitXp(1)}>
+            <UpIcon />
+          </IconButton>
+        </Stack>
 
-          <div>
+        <Box>
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              {isHero ? "Skill Sets " : "Traits "}
+              {displayCount(traitCount)}
+            </AccordionSummary>
+            <AccordionDetails>
+              {isHero
+                ? (traitDefinitions as ISkillSet[]).map((skillSet) => (
+                    <Accordion key={skillSet.name}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        {skillSet.name}
+                      </AccordionSummary>
+                      <AccordionDetails>{traitControls(skillSet.traits, true)}</AccordionDetails>
+                    </Accordion>
+                  ))
+                : traitControls(traitDefinitions, true)}
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+        {isHero && (
+          <Box mt={2}>
             <Accordion>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                {isHero ? "Skill Sets " : "Traits "}
-                {displayCount(traitCount)}
+                Injuries {displayCount(injuryCount)}
               </AccordionSummary>
-              <AccordionDetails>
-                {isHero
-                  ? (traitDefinitions as ISkillSet[]).map((skillSet) => (
-                      <Accordion key={skillSet.name}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          {skillSet.name}
-                        </AccordionSummary>
-                        <AccordionDetails>{traitControls(skillSet.traits, true)}</AccordionDetails>
-                      </Accordion>
-                    ))
-                  : traitControls(traitDefinitions, true)}
-              </AccordionDetails>
+              <AccordionDetails>{traitControls(injuryDefinitions)}</AccordionDetails>
             </Accordion>
-          </div>
-          <div className="mt-4">
-            {isHero && (
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  Injuries {displayCount(injuryCount)}
-                </AccordionSummary>
-                <AccordionDetails>{traitControls(injuryDefinitions)}</AccordionDetails>
-              </Accordion>
-            )}
-            {isHero && (
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  Talents {displayCount(talentCount)}
-                </AccordionSummary>
-                <AccordionDetails>{traitControls(talentDefinitions)}</AccordionDetails>
-              </Accordion>
-            )}
-          </div>
-        </div>
+
+            <Accordion>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                Talents {displayCount(talentCount)}
+              </AccordionSummary>
+              <AccordionDetails>{traitControls(talentDefinitions)}</AccordionDetails>
+            </Accordion>
+          </Box>
+        )}
       </Card>
     </>
   );

@@ -9,7 +9,7 @@ import "slick-carousel/slick/slick-theme.css";
 import "react-spring-bottom-sheet/dist/style.css";
 import { Upgrades } from "../upgrades/Upgrades";
 import { BottomSheet } from "react-spring-bottom-sheet";
-import { AppBar, Paper, Tab, Tabs, Button } from "@mui/material";
+import { AppBar, Paper, Tab, Tabs, Button, Box, Typography, useTheme } from "@mui/material";
 import { selectUnit } from "../../data/listSlice";
 import UpgradePanelHeader from "../components/UpgradePanelHeader";
 import Add from "@mui/icons-material/Add";
@@ -18,6 +18,7 @@ import ValidationErrors from "../ValidationErrors";
 import UndoRemoveUnit from "../components/UndoRemoveUnit";
 import { ISelectedUnit } from "../../data/interfaces";
 import { useRouter } from "next/router";
+import ArmyImage from "../components/ArmyImage";
 
 export default function MobileView() {
   const list = useSelector((state: RootState) => state.list);
@@ -25,6 +26,7 @@ export default function MobileView() {
 
   const dispatch = useDispatch();
   const router = useRouter();
+  const theme = useTheme();
 
   const sheetOpen = (router.query["upgradesOpen"] as string) == "true";
   const armyData = army?.loadedArmyBooks?.[0];
@@ -62,7 +64,7 @@ export default function MobileView() {
     beforeChange: (current, next) => handleSlideChange(null, next),
     afterChange: () => window.scrollTo(0, 0),
   };
-
+  console.log();
   return (
     <>
       <Paper elevation={1} color="primary" square style={{ position: "sticky", top: 0, zIndex: 1 }}>
@@ -98,29 +100,22 @@ export default function MobileView() {
             units={list.units}
           />
         ) : (
-          <div className="p-4 has-text-centered">
-            <h3 className="is-size-3 mb-4">Your list is empty</h3>
-            <Button variant="outlined" onClick={() => handleSlideChange(null, 0)}>
+          <Box p={2} textAlign="center">
+            <Typography variant="h5" sx={{ mb: 2 }}>
+              Your list is empty
+            </Typography>
+            <Button variant="outlined" onClick={() => handleSlideChange(null, 0)} sx={{ mb: 4 }}>
               <Add /> Add Units
             </Button>
-            <div
-              className="is-flex mt-6"
-              style={{
-                height: "160px",
-                width: "100%",
-                backgroundImage: `url("img/gf_armies/${armyData?.name}.png")`,
-                backgroundPosition: "center",
-                backgroundSize: "contain",
-                backgroundRepeat: "no-repeat",
-                position: "relative",
-                zIndex: 1,
-                opacity: 0.5,
-              }}
-            ></div>
-          </div>
+            <ArmyImage name={armyData?.factionName ?? armyData?.name} armyData={armyData} />
+          </Box>
         )}
       </Slider>
 
+      <style>
+        div[data-rsbs-overlay] &#123; background-color: {theme.palette.background.default}{" "}
+        !important; &#125;
+      </style>
       <BottomSheet
         open={sheetOpen}
         onDismiss={onDismissSheet}
@@ -131,7 +126,7 @@ export default function MobileView() {
         snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.9]}
         header={<UpgradePanelHeader />}
       >
-        <Upgrades mobile />
+        <Upgrades />
       </BottomSheet>
 
       <ValidationErrors open={validationOpen} setOpen={setValidationOpen} />

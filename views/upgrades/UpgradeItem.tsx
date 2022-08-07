@@ -1,4 +1,3 @@
-import styles from "./UpgradeItem.module.css";
 import {
   ISelectedUnit,
   IUpgrade,
@@ -16,6 +15,8 @@ import { groupBy } from "../../services/Helpers";
 import pluralise from "pluralize";
 import RuleList from "../components/RuleList";
 import { Fragment } from "react";
+import { Stack, Typography } from "@mui/material";
+import { Box } from "@mui/system";
 
 interface UpgradeItemProps {
   selectedUnit: ISelectedUnit;
@@ -57,8 +58,8 @@ export default function UpgradeItem({
   })();
 
   return (
-    <div className="is-flex is-align-items-center mb-1">
-      <div className="is-flex-grow-1 pr-2">
+    <Stack direction="row" alignItems="center" mb={0.5}>
+      <Box flex={1} pr={1} sx={{ opacity: isValid ? null : 0.5 }}>
         {gainsGroups ? (
           Object.keys(gainsGroups).map((key, i) => {
             const group: IUpgradeGains[] = gainsGroups[key];
@@ -68,38 +69,27 @@ export default function UpgradeItem({
             return <UpgradeItemDisplay key={key} eqp={e} count={count} isValid={isValid} />;
           })
         ) : (
-          <span style={{ color: "rgba(0,0,0,0.8)" }}>{label}</span>
+          <Typography>{label}</Typography>
         )}
-      </div>
-      <div style={{ color: isValid ? null : "rgba(0,0,0,.5)" }}>
+      </Box>
+      <Typography sx={{ opacity: isValid ? null : 0.5 }}>
         {option?.cost ? `${option.cost}pts` : "Free"}&nbsp;
-      </div>
+      </Typography>
       {!previewMode && control}
-    </div>
+    </Stack>
   );
 }
 
 function UpgradeItemDisplay({ eqp, count, isValid }) {
   const name = count > 1 ? pluralise.plural(eqp.name || eqp.label) : eqp.name || eqp.label;
-  const invalidColour = "rgba(0,0,0,.5)";
-  const colour = isValid ? "#000000" : invalidColour;
-  const subtextColour = isValid ? "#656565" : invalidColour;
 
   switch (eqp.type) {
     case "ArmyBookDefense":
     case "ArmyBookRule":
-      return <UpgradeItemRule rule={eqp as IUpgradeGainsRule} colour={colour} />;
+      return <UpgradeItemRule rule={eqp as IUpgradeGainsRule} />;
 
     case "ArmyBookWeapon":
-      return (
-        <UpgradeItemWeapon
-          weapon={eqp as IUpgradeGainsWeapon}
-          name={name}
-          count={count}
-          colour={colour}
-          subtextColour={subtextColour}
-        />
-      );
+      return <UpgradeItemWeapon weapon={eqp as IUpgradeGainsWeapon} name={name} count={count} />;
 
     case "ArmyBookItem":
       return (
@@ -107,8 +97,6 @@ function UpgradeItemDisplay({ eqp, count, isValid }) {
           item={eqp as IUpgradeGainsItem}
           name={name}
           count={count}
-          colour={colour}
-          subtextColour={subtextColour}
           isValid={isValid}
         />
       );
@@ -121,8 +109,6 @@ function UpgradeItemDisplay({ eqp, count, isValid }) {
 interface UpgradeItemDisplayPropsBase {
   name?: string;
   count?: number;
-  colour: string;
-  subtextColour?: string;
   isValid?: boolean;
 }
 
@@ -130,34 +116,27 @@ interface UpgradeItemRuleProps extends UpgradeItemDisplayPropsBase {
   rule: IUpgradeGainsRule;
 }
 
-function UpgradeItemRule(props: UpgradeItemRuleProps) {
-  return (
-    <span style={{ color: props.colour }}>
-      <RuleList specialRules={[props.rule]} />
-    </span>
-  );
+function UpgradeItemRule({ rule, isValid }: UpgradeItemRuleProps) {
+  return <RuleList specialRules={[rule]} />;
 }
 
 interface UpgradeItemWeaponProps extends UpgradeItemDisplayPropsBase {
   weapon: IUpgradeGainsWeapon;
 }
 
-function UpgradeItemWeapon(props: UpgradeItemWeaponProps) {
-  const weapon = props.weapon;
+function UpgradeItemWeapon({ count, name, weapon }: UpgradeItemWeaponProps) {
   const range = weapon && weapon.range ? `${weapon.range}"` : null;
   const attacks = weapon && weapon.attacks ? `A${weapon.attacks}` : null;
   const weaponRules = weapon.specialRules;
 
   return (
     <>
-      {props.count > 1 && <span>{props.count}x </span>}
-      <span className={styles.upgradeName} style={{ color: props.colour }}>
-        {props.name}{" "}
-      </span>
-      <span className={styles.upgradeRules} style={{ color: props.subtextColour }}>
+      {count > 1 && <span>{count}x </span>}
+      <Typography component="span">{name} </Typography>
+      <Typography component="span" color="text.secondary">
         ({[range, attacks].filter((r) => r).join(", ") + (weaponRules?.length > 0 ? ", " : "")}
         <RuleList specialRules={weaponRules} />)
-      </span>
+      </Typography>
     </>
   );
 }
@@ -166,15 +145,12 @@ interface UpgradeItemItemProps extends UpgradeItemDisplayPropsBase {
   item: IUpgradeGainsItem;
 }
 
-function UpgradeItemItem(props: UpgradeItemItemProps) {
-  const { item, count, name, colour, subtextColour, isValid } = props;
+function UpgradeItemItem({ item, count, name, isValid }: UpgradeItemItemProps) {
   return (
     <>
       {count > 1 && <span>{count}x </span>}
-      <span className={styles.upgradeName} style={{ color: colour }}>
-        {name}{" "}
-      </span>
-      <span className={styles.upgradeRules} style={{ color: subtextColour }}>
+      <Typography component="span">{name} </Typography>
+      <Typography component="span" color="text.secondary">
         (
         {item.content.map((c, i) => (
           <Fragment key={i}>
@@ -183,7 +159,7 @@ function UpgradeItemItem(props: UpgradeItemItemProps) {
           </Fragment>
         ))}
         )
-      </span>
+      </Typography>
     </>
   );
 }

@@ -4,6 +4,7 @@ import _ from "lodash";
 import ArmyBookTile from "./ArmyBookTile";
 import { useSelector } from "react-redux";
 import { RootState } from "../../data/store";
+import { Stack, Grid, Typography } from "@mui/material";
 
 interface ArmyBookListProps {
   armyBooks: IArmyData[];
@@ -25,16 +26,21 @@ export function ArmyBookList({ armyBooks, onSelect }: ArmyBookListProps) {
   return (
     <>
       {!(armyBooks?.length > 0) && (
-        <div className="column is-flex is-flex-direction-column is-align-items-center	">
+        <Stack alignItems="center" mx="auto">
           <CircularProgress />
-          <p>Loading armies...</p>
-        </div>
+          <Typography>Loading armies...</Typography>
+        </Stack>
       )}
-      <div className="columns is-mobile is-multiline">
+      <Grid container spacing={2}>
         {sortedArmies.map((army, index) => (
-          <ArmyBookTile key={index} army={army} onSelect={onSelect} enabled={!isLoaded(army.name)} />
+          <ArmyBookTile
+            key={index}
+            army={army}
+            onSelect={onSelect}
+            enabled={!isLoaded(army.name)}
+          />
         ))}
-      </div>
+      </Grid>
     </>
   );
 }

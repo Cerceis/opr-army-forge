@@ -27,7 +27,6 @@ export default function RuleItem({ label, description }) {
           userSelect: "none",
           textDecoration: "underline",
           textDecorationStyle: "dashed",
-          textDecorationColor: "#666",
           textUnderlineOffset: "4px",
         }}
       >

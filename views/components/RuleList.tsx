@@ -50,7 +50,7 @@ export default function RuleList({ specialRules }: { specialRules: (ISpecialRule
 
         return (
           <Fragment key={index}>
-            {index > 0 ? <span className="mr-1">, </span> : null}
+            {index > 0 ? <span>,&nbsp;&nbsp;</span> : null}
             <RuleItem
               label={RulesService.displayName(
                 {

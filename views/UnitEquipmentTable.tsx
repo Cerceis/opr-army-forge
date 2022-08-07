@@ -72,29 +72,22 @@ export default function UnitEquipmentTable({
   const weaponGroupKeys = Object.keys(weaponGroups);
 
   const cellStyle = {
-    paddingLeft: "8px",
-    paddingRight: "8px",
-    borderBottom: "none",
+    px: 1,
   };
-  const headerStyle = { ...cellStyle, fontWeight: 600, paddingTop: "2px", paddingBottom: "2px" };
+  const headerStyle = { ...cellStyle, fontWeight: 600, py: 0.25 };
 
   return (
     <>
       {hasWeapons && (
-        <TableContainer
-          component={Paper}
-          square={square}
-          elevation={0}
-          style={{ borderBottom: "1px solid rgba(0,0,0,.12)", backgroundColor: "transparent" }}
-        >
+        <TableContainer component={Paper} square={square} elevation={0}>
           <Table size="small">
             <TableHead>
-              <TableRow style={{ backgroundColor: "#EBEBEB", fontWeight: 600 }}>
-                <TableCell style={headerStyle}>Weapon</TableCell>
-                <TableCell style={headerStyle}>RNG</TableCell>
-                <TableCell style={headerStyle}>ATK</TableCell>
-                <TableCell style={headerStyle}>AP</TableCell>
-                <TableCell style={headerStyle}>SPE</TableCell>
+              <TableRow sx={{ backgroundColor: "action.hover", fontWeight: 600 }}>
+                <TableCell sx={headerStyle}>Weapon</TableCell>
+                <TableCell sx={headerStyle}>RNG</TableCell>
+                <TableCell sx={headerStyle}>ATK</TableCell>
+                <TableCell sx={headerStyle}>AP</TableCell>
+                <TableCell sx={headerStyle}>SPE</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -118,18 +111,12 @@ export default function UnitEquipmentTable({
         </TableContainer>
       )}
       {hasEquipment && !hideEquipment && (
-        <TableContainer
-          component={Paper}
-          className="mt-2"
-          square={square}
-          elevation={0}
-          style={{ borderBottom: "1px solid rgba(0,0,0,.12)", backgroundColor: "transparent" }}
-        >
+        <TableContainer component={Paper} sx={{ mt: 2 }} square={square} elevation={0}>
           <Table size="small">
             <TableHead>
-              <TableRow style={{ backgroundColor: "#EBEBEB", fontWeight: 600 }}>
-                <TableCell style={headerStyle}>Equipment</TableCell>
-                <TableCell style={headerStyle}>SPE</TableCell>
+              <TableRow sx={{ backgroundColor: "action.hover", fontWeight: 600 }}>
+                <TableCell sx={headerStyle}>Equipment</TableCell>
+                <TableCell sx={headerStyle}>SPE</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -139,11 +126,11 @@ export default function UnitEquipmentTable({
 
                 return (
                   <TableRow key={index}>
-                    <TableCell style={cellStyle}>
+                    <TableCell sx={cellStyle}>
                       {count > 1 ? `${count}x ` : ""}
                       {e.label}
                     </TableCell>
-                    <TableCell style={cellStyle}>
+                    <TableCell sx={cellStyle}>
                       <RuleList specialRules={e.specialRules} />
                     </TableCell>
                   </TableRow>
@@ -171,26 +158,16 @@ export function WeaponRow({
   const weaponCount = count > 1 ? `${count}x ` : null;
   const rules = weapon.specialRules.filter((r) => r.name !== "AP");
 
-  const cellStyle = {
-    paddingLeft: "8px",
-    paddingRight: "8px",
-  };
-  const borderStyle = {
-    borderBottom: "none",
-    borderTop: isProfile ? "none" : "1px solid rgb(224, 224, 224)",
-    paddingBottom: isLastRow ? "12px" : null,
-  };
-
   return (
     <TableRow>
-      <TableCell style={{ ...borderStyle, ...cellStyle, fontWeight: 600 }}>
+      <TableCell sx={{ px: 1, fontWeight: 600 }}>
         {weaponCount}
         {isProfile ? `- ${name}` : name}
       </TableCell>
-      <TableCell style={borderStyle}>{weapon.range ? weapon.range + '"' : "-"}</TableCell>
-      <TableCell style={borderStyle}>{weapon.attacks ? "A" + weapon.attacks : "-"}</TableCell>
-      <TableCell style={borderStyle}>{EquipmentService.getAP(weapon) || "-"}</TableCell>
-      <TableCell style={borderStyle}>
+      <TableCell>{weapon.range ? weapon.range + '"' : "-"}</TableCell>
+      <TableCell>{weapon.attacks ? "A" + weapon.attacks : "-"}</TableCell>
+      <TableCell>{EquipmentService.getAP(weapon) || "-"}</TableCell>
+      <TableCell>
         {rules && rules.length > 0 ? <RuleList specialRules={rules} /> : <span>-</span>}
       </TableCell>
     </TableRow>

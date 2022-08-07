@@ -15,6 +15,8 @@ import {
   Snackbar,
   Divider,
   ListItemIcon,
+  Checkbox,
+  Stack,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -28,7 +30,7 @@ import { updateCreationTime } from "../../data/listSlice";
 import ValidationErrors, { competitiveGoogleDriveLinks } from "../ValidationErrors";
 import ValidationService from "../../services/ValidationService";
 import { useMediaQuery } from "react-responsive";
-import { setOpenReleaseNotes } from "../../data/appSlice";
+import { setDarkMode, setOpenReleaseNotes } from "../../data/appSlice";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
@@ -70,16 +72,15 @@ export default function MainMenu() {
 
   return (
     <>
-      <AppBar elevation={0} style={{ position: "sticky", top: 0, zIndex: 1 }}>
-        <Toolbar className="p-0">
+      <AppBar elevation={0} sx={{ position: "sticky", top: 0, zIndex: 1 }}>
+        <Toolbar style={{ paddingLeft: "8px", paddingRight: "8px" }}>
           <IconButton
             size="large"
             edge="start"
             color="inherit"
             aria-label="menu"
             onClick={goBack}
-            style={{ marginLeft: "0" }}
-            className="mr-4"
+            sx={{ marginLeft: "0", mr: 2, ml: 0 }}
           >
             <HomeIcon />
           </IconButton>
@@ -288,6 +289,7 @@ export function MainMenuOptions() {
         <MenuItem onClick={startGame}>Start Game</MenuItem>
         <MenuItem onClick={openOprWebapp}>Open OPR Webapp</MenuItem>
         <MenuItem onClick={() => dispatch(setOpenReleaseNotes(true))}>See Release Notes</MenuItem>
+        <MenuItemDarkMode />
       </Menu>
       <Snackbar
         open={showTextCopiedAlert}
@@ -297,5 +299,20 @@ export function MainMenuOptions() {
         autoHideDuration={4000}
       />
     </>
+  );
+}
+
+function MenuItemDarkMode() {
+  const dispatch = useDispatch();
+  const darkMode = useSelector((state: RootState) => state.app.darkMode);
+  if (darkMode === undefined) return null;
+  const toggle = () => {
+    dispatch(setDarkMode(!darkMode));
+  };
+  return (
+    <MenuItem onClick={() => toggle()}>
+      <span style={{ flex: 1 }}>Dark Mode</span>
+      <Checkbox sx={{ p: 0 }} checked={darkMode ?? false} />{" "}
+    </MenuItem>
   );
 }

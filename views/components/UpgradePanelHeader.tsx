@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, IconButton, TextField } from "@mui/material";
+import { Button, IconButton, Stack, TextField, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Create";
 import UpgradeService from "../../services/UpgradeService";
 import { addUnit, renameUnit } from "../../data/listSlice";
@@ -38,40 +38,38 @@ export default function UpgradePanelHeader() {
 
   return (
     <>
-      <div className="is-flex is-align-items-center">
-        {editMode ? (
-          <TextField
-            autoFocus
-            variant="standard"
-            className=""
-            value={customName}
-            onChange={(e) => {
-              setCustomName(e.target.value);
-              debounceSave(e.target.value);
-            }}
-          />
-        ) : (
-          <div className="is-flex" style={{ maxWidth: "calc(100% - 7rem)" }}>
-            <h3 className="is-size-4 has-text-left unitName">
+      <Stack direction="row" alignItems="center">
+        <Stack direction="row" flex={1} alignItems="center">
+          {editMode ? (
+            <TextField
+              autoFocus
+              sx={{ flex: 1 }}
+              variant="standard"
+              value={customName}
+              onChange={(e) => {
+                setCustomName(e.target.value);
+                debounceSave(e.target.value);
+              }}
+            />
+          ) : (
+            <Typography variant="h5">
               {selectedUnit.customName || selectedUnit.name}{" "}
               {`[${UnitService.getSize(selectedUnit)}]`}
-            </h3>
-          </div>
-        )}
-        {!previewMode && (
-          <IconButton color="primary" className="ml-2" onClick={() => toggleEditMode()}>
-            <EditIcon />
-          </IconButton>
-        )}
-        <p className="ml-4 is-flex-grow-1" style={{ textAlign: "right" }}>
-          {UpgradeService.calculateUnitTotal(selectedUnit)}pts
-        </p>
-      </div>
+            </Typography>
+          )}
+          {!previewMode && (
+            <IconButton color="primary" className="ml-2" onClick={() => toggleEditMode()}>
+              <EditIcon />
+            </IconButton>
+          )}
+        </Stack>
+        <Typography sx={{ ml: 1 }}>{UpgradeService.calculateUnitTotal(selectedUnit)}pts</Typography>
+      </Stack>
       {previewMode && (
         <Button
           variant="contained"
-          className="mt-2"
-          style={{ width: "100%" }}
+          fullWidth
+          sx={{ mt: 1 }}
           onClick={() => dispatch(addUnit(list.unitPreview))}
         >
           Add to My List

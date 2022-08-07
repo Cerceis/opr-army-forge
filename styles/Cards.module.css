@@ -35,48 +35,6 @@
 }
 
 .profileStat {
-  margin-top: 0;
-  margin-bottom: 16px;
-  margin-left: 6px;
-  margin-right: 6px;
-  width: 86px;
-  border: 1px solid rgba(33, 33, 33, 0.08);
-  border-radius: 4px;
-  background-color: #fafdff;
-}
-
-.profileStat p:first-child {
-  padding: 2px;
-  text-indent: 4px;
-  background-color: #0f71b4;
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  border-top-left-radius: 2px;
-  border-top-right-radius: 2px;
-  text-transform: uppercase;
-  position: relative;
-}
-
-.profileStat p:first-child::after {
-  content: " ";
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 28px;
-  border-left: 4px solid transparent;
-  border-bottom: 4px solid #fafdff;
-}
-
-.profileStat p:last-child {
-  text-align: center;
-  font-weight: bold;
-  font-size: 22px;
-  font-weight: bold;
-  border-radius: 4px;
-}
-
-.profileStat2 {
   display: flex;
   background-color: #0f71b4;
   margin-left: 8px;
@@ -86,11 +44,7 @@
   align-items: flex-end;
 }
 
-.profileStat2 p {
-  padding: 0;
-}
-
-.profileStat2 p:first-child {
+.profileStat span:first-child {
   padding-left: 8px;
   padding-right: 8px;
   color: white;
@@ -100,13 +54,14 @@
   line-height: 32px;
 }
 
-.profileStat2 > div {
+.statBreak {
   border-bottom: 26px solid white;
   border-left: 12px solid transparent;
 }
 
-.profileStat2 p:last-child {
+.profileStat span:last-child {
   background-color: white;
+  color: #121212;
   font-weight: 900;
   font-size: 18px;
   padding-left: 4px;
@@ -115,20 +70,4 @@
   line-height: 26px;
   border-bottom-right-radius: 3px;
   position: relative;
-}
-
-.profileStat2 p:last-child > div {
-  top: 0;
-  left: -2px;
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background-color: #0f71b4;
-}
-
-.profileStat2 p:last-child > div > div {
-  width: 100%;
-  height: 100%;
-  background-color: white;
-  border-top-left-radius: 8px;
 }

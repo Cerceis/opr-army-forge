@@ -1,4 +1,4 @@
-import { Card } from "@mui/material";
+import { Card, Grid, Typography } from "@mui/material";
 import ArmyImage from "../components/ArmyImage";
 import _ from "lodash";
 import { IArmyData } from "../../data/armySlice";
@@ -9,39 +9,20 @@ interface ArmyBookTileProps {
   onSelect: (army: IArmyData) => void;
 }
 
-export default function ArmyBookTile({
-  army,
-  enabled,
-  onSelect,
-}: ArmyBookTileProps) {
+export default function ArmyBookTile({ army, enabled, onSelect }: ArmyBookTileProps) {
   return (
-    <div
-      className="column is-half-mobile is-one-third-tablet is-one-quarter-desktop"
-      style={{ filter: enabled ? null : "saturate(0.25)" }}
-    >
+    <Grid item xs={6} sm={4} lg={3} style={{ filter: enabled ? null : "saturate(0.25)" }}>
       <Card
         elevation={2}
+        sx={{ p: 1 }}
         className={enabled ? "interactable" : null}
         onClick={() => (enabled ? onSelect(army) : null)}
       >
-        <div className="mt-2 is-flex is-flex-direction-column is-flex-grow-1">
-          <ArmyImage name={army.name} armyData={army} />
-          <div className="is-flex is-flex-grow-1 is-align-items-center">
-            <div className="is-flex-grow-1">
-              <p
-                className="my-2"
-                style={{
-                  fontWeight: 600,
-                  textAlign: "center",
-                  fontSize: "14px",
-                }}
-              >
-                {army.name}
-              </p>
-            </div>
-          </div>
-        </div>
+        <ArmyImage name={army.name} armyData={army} />
+        <Typography mt={2} fontWeight={600} textAlign="center" variant="subtitle2">
+          {army.name}
+        </Typography>
       </Card>
-    </div>
+    </Grid>
   );
 }

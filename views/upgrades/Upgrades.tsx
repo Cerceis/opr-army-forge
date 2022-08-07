@@ -7,30 +7,26 @@ import {
   MenuItem,
   InputLabel,
   Select,
+  Box,
+  Stack,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../data/store";
-import styles from "../../styles/Upgrades.module.css";
 import UpgradeGroup from "./UpgradeGroup";
 import UnitEquipmentTable from "../UnitEquipmentTable";
 import RuleList from "../components/RuleList";
 import { ISpecialRule, IUpgradePackage } from "../../data/interfaces";
 import UnitService from "../../services/UnitService";
-import {
-  joinUnit,
-  addCombinedUnit,
-  removeUnit,
-  moveUnit,
-  selectUnit,
-} from "../../data/listSlice";
+import { joinUnit, addCombinedUnit, removeUnit, moveUnit, selectUnit } from "../../data/listSlice";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SpellsTable from "../SpellsTable";
 import { CustomTooltip } from "../components/CustomTooltip";
 import CampaignUpgrades from "./CampaignUpgrades";
 import { IGameRule } from "../../data/armySlice";
 import UnitNotes from "../components/UnitNotes";
+import { Fragment } from "react";
 
-export function Upgrades({ mobile = false }) {
+export function Upgrades() {
   const list = useSelector((state: RootState) => state.list);
   const { gameSystem, loadedArmyBooks, rules } = useSelector((state: RootState) => state.army);
   const dispatch = useDispatch();
@@ -72,7 +68,8 @@ export function Upgrades({ mobile = false }) {
       const ruleDef = ruleDefinitions.find((rd) => rd.name === r.name);
       console.log(r.name, ruleDef);
       const ruleDesc = ruleDef?.description;
-      result ||= ruleDesc && /(?:Psychic|Wizard)\(\d\)/i.test(ruleDesc) && !(/(?:as if)/i.test(ruleDesc));
+      result ||=
+        ruleDesc && /(?:Psychic|Wizard)\(\d\)/i.test(ruleDesc) && !/(?:as if)/i.test(ruleDesc);
     }
     return result;
   })();
@@ -148,11 +145,10 @@ export function Upgrades({ mobile = false }) {
     (!competitive || selectedUnit.size > 1) &&
     !isHero &&
     !isSkirmish && (
-      <FormGroup className="px-4 pt-2 is-flex-direction-row is-align-items-center">
+      <FormGroup sx={{ flexDirection: "row", alignItems: "center" }}>
         <FormControlLabel
           control={<Checkbox checked={selectedUnit.combined} onClick={() => toggleCombined()} />}
           label="Combined Unit"
-          className="mr-2"
         />
         <CustomTooltip
           title={
@@ -180,7 +176,7 @@ export function Upgrades({ mobile = false }) {
     !previewMode &&
     !isSkirmish &&
     isHero && (
-      <FormGroup className="px-4 pt-2 pb-3">
+      <FormGroup>
         <FormControl fullWidth>
           <InputLabel id="demo-simple-select-label" sx={{ zIndex: "unset" }}>
             Join To Unit
@@ -200,36 +196,25 @@ export function Upgrades({ mobile = false }) {
     );
 
   return (
-    <div className={mobile ? styles["upgrade-panel-mobile"] : styles["upgrade-panel"]}>
+    <>
       {selectedUnit && (
-        <Paper square elevation={0} className="pb-4">
-          {combineUnitControl()}
-          {joinToUnitControl()}
-
-          <div className="px-4 pt-4 pb-2">
-            Qua {selectedUnit.quality}+ Def {selectedUnit.defense}+
-          </div>
-
-          {/* Rules */}
-          {specialRules?.length > 0 && (
-            <div className="px-4 pb-4">
-              <RuleList specialRules={specialRules} />
-            </div>
-          )}
-
-          {/* Equipment */}
-          <div className="px-4 pb-4">
+        <Paper square elevation={0} sx={{ p: 2 }}>
+          <Stack spacing={2}>
+            {combineUnitControl()}
+            {joinToUnitControl()}
+            <Box>
+              Qua {selectedUnit.quality}+ Def {selectedUnit.defense}+{/* Rules */}
+            </Box>
+            {specialRules?.length > 0 && (
+              <Box>
+                <RuleList specialRules={specialRules} />
+              </Box>
+            )}
+            {/* Equipment */}
             <UnitEquipmentTable loadout={selectedUnit.loadout} square={true} />
-          </div>
-          {isPsychic && (
-            <div className="px-4 pt-2">
-              <SpellsTable unit={selectedUnit} />
-            </div>
-          )}
-
-          <div className="mx-4">
+            {isPsychic && <SpellsTable unit={selectedUnit} />}
             <UnitNotes selectedUnit={selectedUnit} />
-          </div>
+          </Stack>
         </Paper>
       )}
 
@@ -238,14 +223,14 @@ export function Upgrades({ mobile = false }) {
       )}
 
       {upgradeSets.map((pkg: IUpgradePackage) => (
-        <div key={pkg.uid}>
+        <Fragment key={pkg.uid}>
           {pkg.sections
             .filter((section) => selectedUnit.disabledUpgradeSections.indexOf(section.uid) === -1)
             .map((u, i) => (
               <UpgradeGroup key={u.uid} unit={selectedUnit} upgrade={u} previewMode={previewMode} />
             ))}
-        </div>
+        </Fragment>
       ))}
-    </div>
+    </>
   );
 }

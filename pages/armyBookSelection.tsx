@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, store } from "../data/store";
 import { getArmyBookData, getArmyBooks, IArmyData, resetLoadedBooks } from "../data/armySlice";
 import { useRouter } from "next/router";
-import { IconButton, InputAdornment, Input } from "@mui/material";
+import { IconButton, InputAdornment, Input, Container, Typography } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { resetList } from "../data/listSlice";
@@ -111,14 +111,12 @@ export default function ArmyBookSelection() {
         right={<SearchBox searchText={searchText} setSearchText={setSearchText} />}
       />
 
-      <div className="container">
-        <div className="mx-auto p-4">
-          <div className="mb-4 has-text-centered is-clearfix">
-            <h3 className="is-size-4 pt-4">Choose {appendMode ? "another" : "an"} Army Book</h3>
-          </div>
-          <ArmyBookList armyBooks={officialActiveArmies} onSelect={selectArmy} />
-        </div>
-      </div>
+      <Container sx={{ mt: 2 }}>
+        <Typography variant="h5" sx={{ textAlign: "center", mb: 2 }}>
+          Choose {appendMode ? "another" : "an"} Army Book
+        </Typography>
+        <ArmyBookList armyBooks={officialActiveArmies} onSelect={selectArmy} />
+      </Container>
     </>
   );
 }
@@ -126,41 +124,27 @@ export default function ArmyBookSelection() {
 function SearchBox({ searchText, setSearchText }) {
   return (
     <Input
-      className="mt-1"
       sx={{
-        flexBasis: "5em",
-        flexGrow: 0.25,
-        alignSelf: "center",
-        color: "white",
-        textAlign: "right",
+        flex: 1,
+        color: "common.white",
       }}
-      id="searchfield"
+      id="txtSearch"
       size="small"
-      margin="none"
       autoComplete="off"
       disableUnderline
-      onChange={(e) => {
-        setSearchText(e.target.value);
-      }}
+      onChange={(e) => setSearchText(e.target.value)}
       value={searchText}
-      inputProps={{ style: { textAlign: "right" } }}
+      inputProps={{ style: { textAlign: "right", color: "common.white" } }}
       endAdornment={
-        <InputAdornment position="end" sx={{ width: "2rem", color: "white" }}>
+        <InputAdornment position="end" sx={{ width: "2rem", color: "common.white" }}>
           {searchText ? (
-            <IconButton
-              size="small"
-              onClick={() => {
-                setSearchText(
-                  ((document.getElementById("searchfield") as HTMLInputElement).value = "")
-                );
-              }}
-            >
-              <ClearIcon sx={{ color: "white" }} />
+            <IconButton size="small" onClick={() => setSearchText("")}>
+              <ClearIcon sx={{ color: "common.white" }} />
             </IconButton>
           ) : (
             <SearchIcon
               onClick={() => {
-                document.getElementById("searchfield").focus();
+                document.getElementById("txtSearch").focus();
               }}
             />
           )}

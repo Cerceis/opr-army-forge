@@ -1,37 +1,16 @@
 import Head from "next/head";
-import React, { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React from "react";
+import { useSelector } from "react-redux";
 import { RootState } from "../data/store";
-import { useRouter } from "next/router";
 import { useMediaQuery } from "react-responsive";
 import MobileView from "../views/listBuilder/MobileView";
 import DesktopView from "../views/listBuilder/DesktopView";
-import { getGameRules } from "../data/armySlice";
-import PersistenceService from "../services/PersistenceService";
+import { useLoadFromQuery } from "../hooks/useLoadFromQuery";
 
 export default function List() {
   const armyState = useSelector((state: RootState) => state.army);
-  const router = useRouter();
-  const dispatch = useDispatch();
 
-  // Load army list file
-  useEffect(() => {
-    // Redirect to game selection screen if no army selected
-    if (!armyState.loaded) {
-      const listId = router.query["listId"] as string;
-      if (listId) {
-        PersistenceService.loadFromKey(dispatch, listId);
-        return;
-      }
-
-      router.push({ pathname: "/gameSystem", query: router.query }, null, {
-        shallow: true,
-      });
-      return;
-    } else {
-      dispatch(getGameRules(armyState.gameSystem));
-    }
-  }, []);
+  useLoadFromQuery();
 
   // Break from mobile to desktop layout at 1024px wide
   const isBigScreen = useMediaQuery({ query: "(min-width: 1024px)" });
@@ -42,7 +21,7 @@ export default function List() {
         <title>OPR Army Forge</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {armyState.loaded ? isBigScreen ? <DesktopView /> : <MobileView /> : null}
+      {armyState.loaded && (isBigScreen ? <DesktopView /> : <MobileView />)}
     </>
   );
 }

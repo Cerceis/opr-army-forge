@@ -6,7 +6,7 @@ import RemoveIcon from "@mui/icons-material/Clear";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { selectUnit, removeUnit, addUnits } from "../data/listSlice";
 import UpgradeService from "../services/UpgradeService";
-import { Card, ListItemIcon, ListItemText, MenuItem } from "@mui/material";
+import { Box, Card, ListItemIcon, ListItemText, MenuItem, Stack, Typography } from "@mui/material";
 import UnitService from "../services/UnitService";
 import LinkIcon from "@mui/icons-material/Link";
 import _ from "lodash";
@@ -32,7 +32,7 @@ export function MainList({ onSelected, onUnitRemoved, units }: MainListProps) {
   const unitGroupKeys = Object.keys(unitGroups);
 
   return (
-    <>
+    <Box>
       {unitGroupKeys.map((key) => {
         const armyBook = loadedArmyBooks.find((book) => book.uid === key);
         const points = units
@@ -50,7 +50,7 @@ export function MainList({ onSelected, onUnitRemoved, units }: MainListProps) {
           />
         );
       })}
-    </>
+    </Box>
   );
 }
 
@@ -59,7 +59,7 @@ function MainListSection({ group, army, showTitle, onSelected, onUnitRemoved, po
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <Card elevation={2} sx={{ backgroundColor: "#FAFAFA", marginBottom: "1rem" }} square>
+    <Card elevation={2} sx={{ mb: 2 }} square>
       {showTitle && (
         <ArmyBookGroupHeader
           army={army}
@@ -87,29 +87,31 @@ function MainListSection({ group, army, showTitle, onSelected, onUnitRemoved, po
             };
 
             return (
-              <div
+              <Box
                 key={index}
-                className={hasJoined ? "my-2" : ""}
-                style={{ backgroundColor: hasJoined ? "rgba(0,0,0,.12)" : "" }}
+                sx={{ backgroundColor: hasJoined ? "action.hover" : "", my: hasJoined ? 1 : 0 }}
               >
                 {hasJoined && (
-                  <div className="is-flex px-4 py-2 is-align-items-center">
-                    <LinkIcon style={{ fontSize: "24px", color: "rgba(0,0,0,.38)" }} />
-                    <h3 className="ml-2" style={{ fontWeight: 400, flexGrow: 1 }}>
-                      {heroes.length > 0 && `${heroes[0].customName || heroes[0].name} & `}
+                  <Stack alignItems="center" px={2} py={1} direction="row">
+                    <LinkIcon />
+                    <Typography flex={1} ml={1}>
+                      {heroes.length > 0  && `${heroes[0].customName || heroes[0].name} & `}
                       {selectedUnit.customName || selectedUnit.name}
-                      {` [${unitSize}]`}
-                    </h3>
-                    <p className="mr-2">{unitPoints}pts</p>
-                    <DropMenu>
+                      <Typography
+                        component="span"
+                        color="text.secondary"
+                      >{` [${unitSize}]`}</Typography>
+                    </Typography>
+                    <span>{unitPoints}pts</span>
+                    <DropMenu sx={{ ml: 1 }}>
                       <DuplicateButton
                         units={[selectedUnit, ...attachedUnits].filter((u) => u)}
                         text="Duplicate"
                       />
                     </DropMenu>
-                  </div>
+                  </Stack>
                 )}
-                <div className={hasJoined ? "ml-1" : ""}>
+                <Box sx={{ ml: hasJoined ? 0.5 : 0 }}>
                   {heroes.map((h) => (
                     <MainListItem
                       key={h.selectionId}
@@ -134,8 +136,8 @@ function MainListSection({ group, army, showTitle, onSelected, onUnitRemoved, po
                       onUnitRemoved={onUnitRemoved}
                     />
                   ))}
-                </div>
-              </div>
+                </Box>
+              </Box>
             );
           })}
         </>
