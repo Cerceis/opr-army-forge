@@ -1,4 +1,4 @@
-import { Box, Button, Stack, Tooltip } from "@mui/material";
+import { Box, Button, Stack, Tooltip, Typography } from "@mui/material";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import React, { Fragment, useEffect, useState } from "react";
@@ -72,8 +72,8 @@ function Gameplay() {
             )}
             {gameplay.lobbyId && (
               <div>
-                <p>User: {gameplay.userId}</p>
-                <p>Lobby: {gameplay.lobbyId}</p>
+                <Typography>User: {gameplay.userId}</Typography>
+                <Typography>Lobby: {gameplay.lobbyId}</Typography>
               </div>
             )}
           </Stack>

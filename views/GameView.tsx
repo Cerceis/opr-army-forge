@@ -9,6 +9,7 @@ import {
   Stack,
   Tab,
   Tabs,
+  Typography,
 } from "@mui/material";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
@@ -170,26 +171,25 @@ function ListItem({ socket, userId, unit, onUnitClicked, readonly }: ListItemPro
         <AccordionSummary sx={{ py: 0, px: 2 }}>
           <div className="is-flex-grow-1">
             <div className="px-1">
-              <p className="" style={{ textDecoration: unit.dead ? "line-through" : "" }}>
+              <Typography sx={{ textDecoration: unit.dead ? "line-through" : "" }}>
                 <span>{unit.customName || unit.name} </span>
-                <span style={{ color: "#656565" }}>
+                <Typography component="span" color="text.secondary">
                   [{unitSize}]{" "}
                   <span style={{ fontSize: "80%" }}>
                     {UpgradeService.calculateUnitTotal(unit)}pts
                   </span>
-                </span>
+                </Typography>
                 <span>{unit.pinned ? " (Pinned)" : ""}</span>
-              </p>
+              </Typography>
               <div
                 style={{
                   fontSize: "14px",
-                  color: "rgba(0,0,0,0.6)",
                 }}
               >
-                <div className="is-flex">
-                  <p>Qua {unit.quality}+</p>
-                  <p className="ml-2">Def {unit.defense}+</p>
-                </div>
+                <Stack direction="row" spacing={2} mb={1}>
+                  <Typography>Qua {unit.quality}+</Typography>
+                  <Typography>Def {unit.defense}+</Typography>
+                </Stack>
                 <RuleList
                   specialRules={unit.specialRules.concat(
                     UnitService.getAllUpgradedRules(unit as any)

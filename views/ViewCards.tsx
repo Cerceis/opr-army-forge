@@ -139,7 +139,9 @@ export function UnitCard({
     <Stack justifyContent="center" direction="row" mb={1}>
       <Stat label={tinyScreen ? "Qua" : "Quality"} value={unit.quality + "+"} />
       <Stat label={tinyScreen ? "Def" : "Defense"} value={unit.defense + "+"} />
-      {toughness > 1 && <Stat label={tinyScreen ? "Tough" : "Tough"} value={toughness.toString()} />}
+      {toughness > 1 && (
+        <Stat label={tinyScreen ? "Tough" : "Tough"} value={toughness.toString()} />
+      )}
     </Stack>
   );
 
@@ -248,12 +250,12 @@ export function UnitCard({
   );
 
   const joinedUnitText = attachedTo && (
-    <div className="is-flex" style={{ justifyContent: "center" }}>
+    <Stack direction="row" justifyContent="center" mb={1}>
       <LinkIcon />
-      <p className="mb-2" style={{ textAlign: "center" }}>
+      <Typography textAlign="center">
         Joined to {attachedTo.customName || attachedTo.name}
-      </p>
-    </div>
+      </Typography>
+    </Stack>
   );
 
   return (
