@@ -3,7 +3,7 @@ import { RootState } from "../data/store";
 import { Fragment, useState } from "react";
 import { Box, Card, Divider, IconButton, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { IUnit } from "../data/interfaces";
+import { ISelectedUnit, IUnit } from "../data/interfaces";
 import ArmyBookGroupHeader from "./components/ArmyBookGroupHeader";
 import UnitListItem from "./components/UnitListItem";
 import { addUnit, previewUnit } from "../data/listSlice";
@@ -66,10 +66,13 @@ function UnitSelectionForArmy({ army, showTitle }) {
               </Box>
             )}
             <Divider />
-            {unitGroups[key].map((u, index) => {
+            {unitGroups[key].map((u: ISelectedUnit) => {
               const countInList = list?.units.filter(
                 (listUnit) =>
-                  listUnit.name === u.name && listUnit.armyId === army.uid && !listUnit.joinToUnit
+                  listUnit.name === u.name &&
+                  listUnit.armyId === army.uid &&
+                  (!listUnit.joinToUnit ||
+                    listUnit.specialRules.some((x) => x.name.toLowerCase() === "hero"))
               ).length;
 
               return (

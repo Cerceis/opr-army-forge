@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Fragment, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../data/store";
 import { ISelectedUnit } from "../data/interfaces";
@@ -13,6 +13,7 @@ import _ from "lodash";
 import { DropMenu } from "./components/DropMenu";
 import ArmyBookGroupHeader from "./components/ArmyBookGroupHeader";
 import UnitListItem from "./components/UnitListItem";
+import { IArmyData } from "../data/armySlice";
 
 export interface MainListProps {
   onSelected: (unit: ISelectedUnit) => void;
@@ -23,12 +24,7 @@ export interface MainListProps {
 export function MainList({ onSelected, onUnitRemoved, units }: MainListProps) {
   const loadedArmyBooks = useSelector((state: RootState) => state.army.loadedArmyBooks);
 
-  const rootUnits = _.orderBy(
-    units.filter((u) => !(u.joinToUnit && units.some((t) => t.selectionId === u.joinToUnit))),
-    (x) => x.sortId
-  );
-
-  const unitGroups = _.groupBy(rootUnits, (x) => x.armyId);
+  const unitGroups = _.groupBy(units, (x) => x.armyId);
   const unitGroupKeys = Object.keys(unitGroups);
 
   return (
@@ -43,7 +39,7 @@ export function MainList({ onSelected, onUnitRemoved, units }: MainListProps) {
             key={key}
             army={armyBook}
             showTitle={loadedArmyBooks.length > 1}
-            group={unitGroups[key]}
+            units={unitGroups[key]}
             onSelected={onSelected}
             onUnitRemoved={onUnitRemoved}
             points={points}
@@ -54,9 +50,28 @@ export function MainList({ onSelected, onUnitRemoved, units }: MainListProps) {
   );
 }
 
-function MainListSection({ group, army, showTitle, onSelected, onUnitRemoved, points }) {
+interface MainListSectionProps {
+  units: ISelectedUnit[];
+  army: IArmyData;
+  showTitle: boolean;
+  onSelected: Function;
+  onUnitRemoved: Function;
+  points: number;
+}
+
+function MainListSection({
+  units,
+  army,
+  showTitle,
+  onSelected,
+  onUnitRemoved,
+  points,
+}: MainListSectionProps) {
   const list = useSelector((state: RootState) => state.list);
   const [collapsed, setCollapsed] = useState(false);
+
+  const fullUnits = useMemo(() => UnitService.getFullUnitList(units, false), [units]);
+  console.log("fullUnits", fullUnits);
 
   return (
     <Card elevation={2} sx={{ mb: 2 }} square>
@@ -70,21 +85,18 @@ function MainListSection({ group, army, showTitle, onSelected, onUnitRemoved, po
       )}
       {!collapsed && (
         <>
-          {group.map((selectedUnit: ISelectedUnit, index: number) => {
-            // TODO: REFACTOR!
+          {fullUnits.map((fullUnit, index: number) => {
+            const { hasJoined, heroes, unit, unitSize, unitPoints, joined } = fullUnit;
 
-            const attachedUnits: ISelectedUnit[] = UnitService.getAttachedUnits(list, selectedUnit);
-            const [heroes, otherJoined]: [ISelectedUnit[], ISelectedUnit[]] = _.partition(
-              attachedUnits,
-              (u) => u.specialRules.some((r) => r.name === "Hero")
+            const listItem = (unit: ISelectedUnit, hideOptions?: boolean) => (
+              <MainListItem
+                selected={list.selectedUnitId === unit.selectionId}
+                unit={unit}
+                onSelected={() => onSelected(unit)}
+                onUnitRemoved={onUnitRemoved}
+                hideOptions={hideOptions}
+              />
             );
-            const hasJoined = attachedUnits.length > 0;
-            const unitSize = UnitService.getSize(selectedUnit, otherJoined);
-            const unitPoints = UpgradeService.calculateUnitTotal(selectedUnit, attachedUnits);
-
-            const handleClick = (unit) => {
-              onSelected(unit);
-            };
 
             return (
               <Box
@@ -95,8 +107,8 @@ function MainListSection({ group, army, showTitle, onSelected, onUnitRemoved, po
                   <Stack alignItems="center" px={2} py={1} direction="row">
                     <LinkIcon />
                     <Typography flex={1} ml={1}>
-                      {heroes.length > 0  && `${heroes[0].customName || heroes[0].name} & `}
-                      {selectedUnit.customName || selectedUnit.name}
+                      {heroes.length > 0 && `${heroes[0].customName || heroes[0].name} & `}
+                      {unit.customName || unit.name}
                       <Typography
                         component="span"
                         color="text.secondary"
@@ -104,38 +116,16 @@ function MainListSection({ group, army, showTitle, onSelected, onUnitRemoved, po
                     </Typography>
                     <span>{unitPoints}pts</span>
                     <DropMenu sx={{ ml: 1 }}>
-                      <DuplicateButton
-                        units={[selectedUnit, ...attachedUnits].filter((u) => u)}
-                        text="Duplicate"
-                      />
+                      <DuplicateButton units={[unit, ...heroes, joined].filter((u) => u)} />
                     </DropMenu>
                   </Stack>
                 )}
                 <Box sx={{ ml: hasJoined ? 0.5 : 0 }}>
                   {heroes.map((h) => (
-                    <MainListItem
-                      key={h.selectionId}
-                      list={list}
-                      unit={h}
-                      onSelected={handleClick}
-                      onUnitRemoved={onUnitRemoved}
-                    />
+                    <Fragment key={h.selectionId}>{listItem(h)}</Fragment>
                   ))}
-                  <MainListItem
-                    list={list}
-                    unit={selectedUnit}
-                    onSelected={handleClick}
-                    onUnitRemoved={onUnitRemoved}
-                  />
-                  {otherJoined.map((u) => (
-                    <MainListItem
-                      key={u.selectionId}
-                      list={list}
-                      unit={u}
-                      onSelected={handleClick}
-                      onUnitRemoved={onUnitRemoved}
-                    />
-                  ))}
+                  {listItem(unit)}
+                  {joined && listItem(joined, true)}
                 </Box>
               </Box>
             );
@@ -146,11 +136,25 @@ function MainListSection({ group, army, showTitle, onSelected, onUnitRemoved, po
   );
 }
 
-function MainListItem({ list, unit, onSelected, onUnitRemoved }) {
+interface MainListItemProps {
+  selected: boolean;
+  unit: ISelectedUnit;
+  onSelected: Function;
+  onUnitRemoved: Function;
+  hideOptions: boolean;
+}
+
+function MainListItem({
+  selected,
+  unit,
+  onSelected,
+  onUnitRemoved,
+  hideOptions,
+}: MainListItemProps) {
   const dispatch = useDispatch();
 
   const handleSelectUnit = (unit: ISelectedUnit) => {
-    if (list.selectedUnitId !== unit.selectionId) {
+    if (!selected) {
       dispatch(selectUnit(unit.selectionId));
     }
     onSelected(unit);
@@ -164,31 +168,33 @@ function MainListItem({ list, unit, onSelected, onUnitRemoved }) {
   return (
     <UnitListItem
       unit={unit}
-      selected={list.selectedUnitId === unit.selectionId}
+      selected={selected}
       onClick={() => {
         handleSelectUnit(unit);
       }}
       rightControl={
-        <DropMenu>
-          <DuplicateButton units={[unit]} text="Duplicate" />
-          <MenuItem
-            color="primary"
-            onClick={(e) => {
-              handleRemove(unit);
-            }}
-          >
-            <ListItemIcon>
-              <RemoveIcon />
-            </ListItemIcon>
-            <ListItemText>Remove</ListItemText>
-          </MenuItem>
-        </DropMenu>
+        hideOptions ? null : (
+          <DropMenu>
+            <DuplicateButton units={[unit]} />
+            <MenuItem
+              color="primary"
+              onClick={(e) => {
+                handleRemove(unit);
+              }}
+            >
+              <ListItemIcon>
+                <RemoveIcon />
+              </ListItemIcon>
+              <ListItemText>Remove</ListItemText>
+            </MenuItem>
+          </DropMenu>
+        )
       }
     />
   );
 }
 
-export function DuplicateButton({ units, text = "" }) {
+export function DuplicateButton({ units }) {
   const dispatch = useDispatch();
 
   const duplicateUnits = (units: ISelectedUnit[]) => {
@@ -202,16 +208,10 @@ export function DuplicateButton({ units, text = "" }) {
         duplicateUnits(units);
       }}
     >
-      {text ? (
-        <>
-          <ListItemIcon>
-            <ContentCopyIcon />
-          </ListItemIcon>
-          <ListItemText>{text}</ListItemText>
-        </>
-      ) : (
+      <ListItemIcon>
         <ContentCopyIcon />
-      )}
+      </ListItemIcon>
+      <ListItemText>Duplicate</ListItemText>
     </MenuItem>
   );
 }

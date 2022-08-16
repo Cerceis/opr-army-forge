@@ -161,6 +161,11 @@ export const listSlice = createSlice({
         state.undoUnitRemove = state.units.splice(removeIndex, 1);
       }
 
+      for (let unit of state.units) {
+        if (unit.joinToUnit === unitId)
+          unit.joinToUnit = null;
+      }
+
       state.points = UpgradeService.calculateListTotal(state.units);
 
       debounceSave(current(state));
@@ -279,7 +284,7 @@ export const listSlice = createSlice({
       unit.xp += xp;
 
       state.points = UpgradeService.calculateListTotal(state.units);
-      
+
       debounceSave(current(state));
     },
     toggleTrait(state, action: PayloadAction<{ unitId: string, trait: string }>) {

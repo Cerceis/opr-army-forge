@@ -76,7 +76,7 @@ export function CreateView(props: CreateViewProps) {
           sx={{ px: 6 }}
           variant="contained"
           onClick={() => create()}
-          disabled={armyState.loadingArmyData}
+          disabled={armyState.loadingArmyData || armyState.loadedArmyBooks.length === 0}
         >
           Create List
         </Button>

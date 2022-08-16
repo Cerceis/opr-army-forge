@@ -309,8 +309,7 @@ export default class PersistenceService {
     };
 
     const getRules = (unit: ISelectedUnit) => {
-      const rules = (unit.specialRules ?? [])
-        .concat(UnitService.getAllUpgradedRules(unit));
+      const rules = UnitService.getAllRules(unit);
 
       const ruleGroups = groupBy(rules, "name");
       const keys = Object.keys(ruleGroups);
@@ -338,20 +337,25 @@ export default class PersistenceService {
       return displayRules.concat(unit.traits).join(", ");
     };
 
-    const unitGroups = UnitService.getDisplayUnits(list.units);
+    const fullUnits = UnitService.getFullUnitList(list.units, true);
+    const unitGroups = UnitService.getGroupedDisplayUnits(fullUnits);
+
+    const writeLine = (unit: ISelectedUnit, count: number) => {
+      const name = unit.customName || unit.name;
+      const size = UnitService.getSize(unit);
+      const cost = UpgradeService.calculateUnitTotal(unit);
+      lines.push(`${count > 1 ? (count + "x ") : ""}${name} [${size}] Q${unit.quality}+ D${unit.defense}+ | ${cost}pts | ` + getRules(unit));
+      lines.push(getWeapons(unit) + "\n");
+    }
 
     for (let key of Object.keys(unitGroups)) {
       const group = unitGroups[key];
-      const unit = group[0];
 
-      const originalUnit = list.units.find((x) => x.selectionId === unit.selectionId);
-      const attachedUnit = list.units.find((x) => x.joinToUnit === unit.selectionId && x.id === unit.id);
-      const originalUnitCost = UpgradeService.calculateUnitTotal(originalUnit);
-      const attachedUnitCost = attachedUnit ? UpgradeService.calculateUnitTotal(attachedUnit) : 0;
-      const cost = originalUnitCost + attachedUnitCost;
+      for (let hero of group.flatMap(x => x.heroes)) {
+        writeLine(hero, 1);
+      }
       // TODO: Campaign unit pt cost...?
-      lines.push(`${group.length > 1 ? (group.length + "x ") : ""}${unit.customName ?? unit.name} [${UnitService.getSize(unit)}] Q${unit.quality}+ D${unit.defense}+ | ${cost}pts | ` + getRules(unit));
-      lines.push(getWeapons(unit) + "\n");
+      writeLine(group[0].unit, group.length);
     }
 
     return lines.join("\n");

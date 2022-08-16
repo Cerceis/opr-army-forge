@@ -46,18 +46,6 @@ export default function MainMenu() {
   const [validationAnchorElement, setValidationAnchorElement] = useState(null);
   const errors = ValidationService.getErrors(army, list);
 
-  // const handleShareTTS = () => {
-  //   if (!list.creationTime) {
-  //     const creationTime = handleSave();
-  //     PersistenceService.downloadTTS({
-  //       ...list,
-  //       creationTime,
-  //     });
-  //   } else {
-  //     PersistenceService.downloadTTS(list);
-  //   }
-  // };
-
   const goBack = () => {
     const confirmMsg = "Going back will leave your current list and go back home. Continue?";
     if (list.creationTime || confirm(confirmMsg)) {
@@ -171,6 +159,19 @@ export function MainMenuOptions() {
   const router = useRouter();
   const [menuAnchorElement, setMenuAnchorElement] = useState(null);
   const [showTextCopiedAlert, setShowTextCopiedAlert] = useState(false);
+  const isLive = window.location.origin.indexOf("onepagerules.com") > -1;
+
+  const handleShareTTS = () => {
+    if (!list.creationTime) {
+      const creationTime = handleSave();
+      PersistenceService.downloadTTS({
+        ...list,
+        creationTime,
+      });
+    } else {
+      PersistenceService.downloadTTS(list);
+    }
+  };
 
   const handleSave = () => {
     const creationTime = PersistenceService.createSave(army, list.name, list);
@@ -278,7 +279,7 @@ export function MainMenuOptions() {
           </ListItemIcon>
           <ListItemText>Export as Army Forge File</ListItemText>
         </MenuItem>
-        {/* <MenuItem onClick={handleShareTTS}>Export as TTS File</MenuItem> */}
+        {!isLive && <MenuItem onClick={handleShareTTS}>Export as TTS File</MenuItem>}
         <MenuItem onClick={handleTextExport}>
           <ListItemIcon>
             <AssignmentOutlinedIcon sx={{ color: "#9E9E9E" }} />

@@ -5,7 +5,6 @@ import {
   IUpgradeGains,
   IUpgradeGainsItem,
   IUpgradeGainsRule,
-  IUpgradeGainsWeapon,
   IUpgradePackage,
   IUpgrade,
   IUpgradeOption,
@@ -14,12 +13,22 @@ import { ListState } from "../data/listSlice";
 import _ from "lodash";
 import EquipmentService from "./EquipmentService";
 import { makeCopy } from "./Helpers";
+import UpgradeService from "./UpgradeService";
+
+export interface IFullUnit {
+  unitSize: number;
+  unitPoints: number;
+  unit: ISelectedUnit;
+  joined?: ISelectedUnit;
+  heroes: ISelectedUnit[];
+  hasJoined: boolean
+};
 
 export default class UnitService {
   public static getSelected(list: ListState): ISelectedUnit {
     return list.selectedUnitId === null || list.selectedUnitId === undefined
       ? null
-      : list.units.filter((u) => u.selectionId === list.selectedUnitId)[0];
+      : list.units.find((u) => u.selectionId === list.selectedUnitId);
   }
 
   public static getAllEquipment(unit: ISelectedUnit) {
@@ -28,32 +37,17 @@ export default class UnitService {
     return unit.loadout.concat(itemContent);
   }
 
-  public static getAllUpgrades(unit: ISelectedUnit, excludeModels: boolean): IUpgradeGains[] {
+  public static getUpgradeRules(unit: ISelectedUnit): IUpgradeGainsRule[] {
     return unit.selectedUpgrades
       .map((x) => x.option)
-      .filter((u) => (excludeModels ? !u.isModel : true))
-      .reduce((value, option) => value.concat(option.gains), []);
-  }
-
-  public static getUpgradeRules(unit: ISelectedUnit): IUpgradeGainsRule[] {
-    return this
-      .getAllUpgrades(unit, true)
+      .reduce((value, option) => value.concat(option.gains), [])
       .filter(x => x.type === "ArmyBookRule") as IUpgradeGainsRule[];
   }
 
-  public static getUpgradeItems(unit: ISelectedUnit): IUpgradeGainsItem[] {
-    return this
-      .getAllUpgrades(unit, true)
-      .filter(x => x.type === "ArmyBookItem") as IUpgradeGainsItem[];
-  }
-
   public static getAllUpgradedRules(unit: ISelectedUnit): IUpgradeGainsRule[] {
-    const upgrades = this.getAllUpgrades(unit, true);
-
-    const rules = upgrades.filter((u) => u.type === "ArmyBookRule") || [];
+    const rules = this.getUpgradeRules(unit) || [];
     const rulesFromItems =
-      upgrades
-        .filter((u) => u.type === "ArmyBookItem")
+      unit.loadout?.filter((u) => u.type === "ArmyBookItem")
         .reduce(
           (value, u: IUpgradeGainsItem) =>
             value.concat(u.content.filter((c) => c.type === "ArmyBookRule" || c.type === "ArmyBookDefense")),
@@ -63,20 +57,8 @@ export default class UnitService {
     return rules.concat(rulesFromItems) as IUpgradeGainsRule[];
   }
 
-  public static getAllUpgradeWeapons(unit: ISelectedUnit): IUpgradeGainsWeapon[] {
-    const isWeapon = (u) => u.type === "ArmyBookWeapon";
-    const itemWeapons = this.getAllUpgradeItems(unit).reduce(
-      (value, i) => value.concat(i.content.filter(isWeapon)),
-      []
-    );
-
-    const all = this.getAllUpgrades(unit, false).filter(isWeapon).concat(itemWeapons) as IUpgradeGainsWeapon[];
-
-    return all;
-  }
-
-  public static getAllUpgradeItems(unit: ISelectedUnit): IUpgradeGainsItem[] {
-    return this.getAllUpgrades(unit, false).filter((u) => u.type === "ArmyBookItem") as IUpgradeGainsItem[];
+  public static getAllRules(unit: ISelectedUnit): IUpgradeGainsRule[] {
+    return (unit.specialRules || []).concat(this.getAllUpgradedRules(unit)) as IUpgradeGainsRule[];
   }
 
   public static getSize(unit: ISelectedUnit, joined?: ISelectedUnit[]): number {
@@ -102,27 +84,10 @@ export default class UnitService {
     };
   }
 
-  public static getAttachedUnits(list: ListState, unit: ISelectedUnit): ISelectedUnit[] {
-    return list.units.filter((u) => u.joinToUnit === unit.selectionId);
-  }
-  public static getChildren(list: ListState, unit: ISelectedUnit): ISelectedUnit[] {
-    return list.units.filter((u) => u.selectionId === unit.joinToUnit);
-  }
-  public static getFamily(list: ListState, unit: ISelectedUnit): ISelectedUnit[] {
-    let parents = UnitService.getAttachedUnits(list, unit);
-    let grandparents = parents.flatMap((u) => {
-      return UnitService.getAttachedUnits(list, u);
-    });
-    let children = UnitService.getChildren(list, unit);
-    let grandchildren = children.flatMap((u) => {
-      return UnitService.getChildren(list, u);
-    });
-    return _.uniq([...grandparents, ...parents, unit, ...children, ...grandchildren]);
-  }
-
   public static mergeCombinedUnit(unit: ISelectedUnit, attached: ISelectedUnit): ISelectedUnit {
     console.log("Merging ", unit);
     console.log("with", attached);
+    if (!attached) return unit;
     return {
       ...unit,
       size: unit.size + attached.size,
@@ -131,8 +96,38 @@ export default class UnitService {
     };
   }
 
-  public static getDisplayUnits(input: ISelectedUnit[]) {
+  public static getFullUnitList(input: ISelectedUnit[], combine: boolean) {
     const units = (input ?? []).map((u) => makeCopy(u));
+
+    const result = units.filter((x: ISelectedUnit) => !x.joinToUnit).map((unit: ISelectedUnit) => {
+      const attachedUnits: ISelectedUnit[] = input.filter((u) => u.joinToUnit === unit.selectionId);
+      const [heroes, joined]: [ISelectedUnit[], ISelectedUnit[]] = _.partition(
+        attachedUnits,
+        (u) => u.specialRules.some((r) => r.name === "Hero")
+      );
+
+      const unitSize = joined.reduce(
+        (size, u) => size + UnitService.getSize(u),
+        UnitService.getSize(unit)
+      );
+      const unitPoints = attachedUnits.reduce(
+        (cost, u) => cost + UpgradeService.calculateUnitTotal(u),
+        UpgradeService.calculateUnitTotal(unit)
+      );
+      return {
+        unitSize,
+        unitPoints,
+        unit: combine ? UnitService.mergeCombinedUnit(unit, joined[0]) : unit,
+        joined: joined[0], // Combined units can only have one joined...
+        heroes,
+        hasJoined: attachedUnits.length > 0
+      };
+    });
+
+    return _.sortBy(result, x => x.unit.sortId);
+  }
+
+  public static getGroupedDisplayUnits(input: IFullUnit[]) {
     const unitAsKey = (unit: ISelectedUnit) => {
       return {
         id: unit.id,
@@ -149,18 +144,7 @@ export default class UnitService {
       };
     };
 
-    const getAttachedUnit = (u: ISelectedUnit) =>
-      units.find((x) => x.joinToUnit === u.selectionId && x.combined);
-
-    const viewUnits = units
-      .filter((u) => !u.combined || !u.joinToUnit)
-      .map((u) => (u.combined ? UnitService.mergeCombinedUnit(u, getAttachedUnit(u)) : u));
-
-    console.log(viewUnits);
-
-    const unitGroups = _.groupBy(viewUnits, (u) => JSON.stringify(unitAsKey(u)));
-
-    return unitGroups;
+    return _.groupBy(input, (u) => JSON.stringify(unitAsKey(u.unit)));
   }
 
   private static readonly countRegex = /^(\d+)x\s/;
