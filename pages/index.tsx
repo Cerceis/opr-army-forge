@@ -5,7 +5,6 @@ import { Box, Button, Container, Stack } from "@mui/material";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import AddIcon from "@mui/icons-material/Add";
 import { GetServerSidePropsContext } from "next";
-import { PWAInstallationPopup } from "../views/components/PWAInstallationPopup"
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const host = context.req.headers.host;
@@ -27,7 +26,6 @@ export default function Home() {
   const router = useRouter();
   return (
     <Container className={styles.homeContainer + " container"}>
-      <PWAInstallationPopup />
       <div className={styles.outerColumn}>
         <Box mx="auto" pt={6} textAlign="center" className={styles.homeColumn}>
           <div>

@@ -9,6 +9,7 @@ import ReleaseNotes from "../views/components/ReleaseNotes";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useEffect, useMemo } from "react";
 import { setDarkMode } from "../data/appSlice";
+import { PWAInstallationPopup } from "../views/components/PWAInstallationPopup"
 
 // TODO: Better place for global generic things to go?
 pluralise.addSingularRule(/Fuses$/i, "Fuse"); // Spear-Fuses -> Spear-Fuse
@@ -86,7 +87,7 @@ const ThemedApp = ({ Component, pageProps }) => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-
+      <PWAInstallationPopup />
       <Component {...pageProps} />
       <ReleaseNotes />
     </ThemeProvider>

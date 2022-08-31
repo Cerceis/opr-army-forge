@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardActions, Button, Typography, Checkbox } from "@mui/material";
-import DownloadIcon from '@mui/icons-material/Download';
-import CloseIcon from '@mui/icons-material/Close';
 
 export const PWAInstallationPopup = () => {
 
@@ -65,8 +63,8 @@ export const PWAInstallationPopup = () => {
                 </div>
             </CardContent>
             <CardActions style={{ justifyContent: "end", display: "flex" }}>
-                <Button color="success" variant="contained" onClick={()=>{install()}}>Install <DownloadIcon /></Button>
-                <Button color="error" onClick={() => {setDisplayStyle("none"); setNoPwaInstallationPrompt(neverDisplayAnymoreChecked);}}>Close <CloseIcon /> </Button>
+                <Button color="error" onClick={() => {setDisplayStyle("none"); setNoPwaInstallationPrompt(neverDisplayAnymoreChecked);}}>Close</Button>
+                <Button color="success" onClick={()=>{install()}}>Install</Button>
             </CardActions>
         </Card>
     );
