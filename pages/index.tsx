@@ -1,7 +1,7 @@
 import Head from "next/head";
 import styles from "../styles/Home.module.css";
 import { useRouter } from "next/router";
-import { Box, Button, Container, createTheme, Stack,  } from "@mui/material";
+import { Box, Button, Container, Stack } from "@mui/material";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import AddIcon from "@mui/icons-material/Add";
 import { GetServerSidePropsContext } from "next";
@@ -21,7 +21,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       }
     : { props: {} };
 }
-
 
 
 export default function Home() {
