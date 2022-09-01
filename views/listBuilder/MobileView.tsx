@@ -100,7 +100,7 @@ export default function MobileView() {
             <Typography variant="h5" sx={{ mb: 2 }}>
               Your list is empty
             </Typography>
-            <Button variant="outlined" onClick={() => handleSlideChange(null, 0)} sx={{ mb: 4 }}>
+            <Button variant="outlined" onClick={() => handleSlideChange(null, 0)} sx={{ mb: 4, zIndex: 2 }}>
               <Add /> Add Units
             </Button>
             <ArmyImage name={armyData?.factionName ?? armyData?.name} armyData={armyData} />
