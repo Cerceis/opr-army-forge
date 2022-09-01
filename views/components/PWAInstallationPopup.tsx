@@ -63,8 +63,8 @@ export const PWAInstallationPopup = () => {
                 </div>
             </CardContent>
             <CardActions style={{ justifyContent: "end", display: "flex" }}>
-                <Button color="error" onClick={() => {setDisplayStyle("none"); setNoPwaInstallationPrompt(neverDisplayAnymoreChecked);}}>Close</Button>
-                <Button color="success" onClick={()=>{install()}}>Install</Button>
+                <Button onClick={() => {setDisplayStyle("none"); setNoPwaInstallationPrompt(neverDisplayAnymoreChecked);}}>Close</Button>
+                <Button onClick={()=>{install()}}>Install</Button>
             </CardActions>
         </Card>
     );
