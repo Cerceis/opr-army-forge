@@ -9,9 +9,7 @@ import { useLoadFromQuery } from "../hooks/useLoadFromQuery";
 
 export default function List() {
   const armyState = useSelector((state: RootState) => state.army);
-
   useLoadFromQuery();
-
   // Break from mobile to desktop layout at 1024px wide
   const isBigScreen = useMediaQuery({ query: "(min-width: 1024px)" });
 
